@@ -1,0 +1,21 @@
+# ملفات البناء
+build/
+app/build/
+.gradle/
+.cxx/
+captures/
+*.apk
+*.aab
+
+# إعدادات محلية (مسارات الجهاز وSDK)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+.DS_Store
+
+# مفاتيح التوقيع: لا ترفعها أبداً
+*.jks
+*.keystore
+keystore.properties

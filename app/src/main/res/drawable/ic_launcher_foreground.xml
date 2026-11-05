@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- أيقونة بسيطة: هلال ونجمة بالذهبي على خلفية الألوان الداكنة -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- المساحة الآمنة للأيقونة التكيفية 66dp في المنتصف -->
+    <group
+        android:translateX="21.6"
+        android:translateY="21.6">
+
+        <!-- الهلال -->
+        <path
+            android:fillColor="#C9A227"
+            android:pathData="M30,12
+                A24,24 0 1,0 30,54
+                A19,19 0 1,1 30,12
+                Z" />
+
+        <!-- النجمة الصغيرة -->
+        <path
+            android:fillColor="#C9A227"
+            android:pathData="M42,20 L44,25 L49,25 L45,28 L46.5,33 L42,30 L37.5,33 L39,28 L35,25 L40,25 Z" />
+    </group>
+</vector>
