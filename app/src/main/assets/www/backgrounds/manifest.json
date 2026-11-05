@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "note": "كل عنصر لازم يكون له: id, title, category, type (image أو video), file, license, source, author. العناصر الناقصة لا تظهر في التطبيق. التفاصيل في LICENSES.md.",
+  "items": []
+}
