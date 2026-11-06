@@ -84,7 +84,7 @@
     bgRuntime: new Map(), // id -> {el, url, blob, type}
     tafsirMap: null, tafsirKey: "",
     transMap: null, transKey: "",
-    exporting: false, recorder: null, chunks: [], cancelled: false, exportStream: null, exportMime: "",
+    exporting: false, fast: false, recorder: null, chunks: [], cancelled: false, exportStream: null, exportMime: "",
     exportStart: 0, exportEnd: 0, lastError: null,
     resultUrl: null, lastBlob: null,
     currentDraftId: null,
@@ -730,6 +730,7 @@
   function frame() {
     requestAnimationFrame(frame);
     try {
+      if (RT.fast) return; // التصدير السريع يرسم على الكانفس بنفسه
       const [w, h] = dims();
       if (canvas.width !== w || canvas.height !== h) resizeCanvas(w, h);
       const sc = buildScene();
@@ -945,12 +946,20 @@
     $("retryBtn").hidden = on || !RT.lastError;
   }
 
+  // شريط التقدّم: نسبة + زمن متبقٍّ تقريبي (etaSec إذا معروف)
+  function setProgress(p, etaSec) {
+    const pct = clamp(p, 0, 1);
+    $("progressBar").style.width = `${(pct * 100).toFixed(1)}%`;
+    $("progressPct").textContent = `${toAr(Math.round(pct * 100))}%`;
+    setStatus("remainingText", etaSec != null && pct < 1 ? `المتبقي تقريباً: ${fmt(etaSec)}` : "");
+    notifyNativeProgress(pct);
+  }
+
+  // التسجيل المباشر: الشريط يتبع زمن الصوت
   function updateExportProgress(t) {
     const total = Math.max(0.1, RT.exportEnd - RT.exportStart);
     const done = clamp((t - RT.exportStart) / total, 0, 1);
-    $("progressBar").style.width = `${(done * 100).toFixed(1)}%`;
-    const remaining = Math.max(0, RT.exportEnd - t);
-    setStatus("remainingText", `المتبقي تقريباً: ${fmt(remaining)} · ${toAr(Math.round(done * 100))}%`);
+    setProgress(done, Math.max(0, RT.exportEnd - t));
     if (t >= RT.exportEnd - 0.05 || audio.ended) stopRecording();
   }
 
@@ -961,106 +970,237 @@
     }
   }
 
+  // يرجّع كل شيء لحالة الانتظار (يُستدعى عند النجاح والفشل والإلغاء)
+  function resetExportState() {
+    const rec = RT.recorder;
+    RT.recorder = null;
+    RT.exporting = false;
+    RT.fast = false;
+    RT.chunks = [];
+    if (rec && rec.state !== "inactive") {
+      try { rec.stop(); } catch (_) { /* مغلق أصلاً */ }
+    }
+    audio.pause();
+    setKeepScreen(false);
+    stopNativeService();
+    if (RT.exportStream) {
+      RT.exportStream.getTracks().forEach((t) => t.stop());
+      RT.exportStream = null;
+    }
+    setExportUi(false);
+  }
+
+  // اسم الملف: اسم السورة ورقم الآيات، مثل «الفاتحة 1-7.mp4»
+  function exportFileName(ext) {
+    const s = surahData();
+    const base = s ? s.name : "مقطع";
+    const range = S.from === S.to ? `${S.from}` : `${S.from}-${S.to}`;
+    return `${base} ${range}.${ext}`;
+  }
+
   async function startExport() {
     if (RT.exporting) return;
     RT.lastError = null;
     RT.cancelled = false;
+    RT.exporting = true;
     $("retryBtn").hidden = true;
     $("resultBox").hidden = true;
-    $("progressBar").style.width = "0%";
+    setProgress(0, null);
     const problems = validateExport();
-    if (problems.length) return setStage(problems[0], "error");
-    const mime = pickMime();
-    if (!mime) return abortExport(new Error("متصفحك ما يدعم تسجيل الفيديو. جرّب Chrome أو Edge أو Firefox."));
-
+    if (problems.length) {
+      RT.exporting = false;
+      return setStage(problems[0], "error");
+    }
+    setExportUi(true);
+    setKeepScreen(true);
+    startNativeService();
+    let fallbackNote = "";
     try {
       setStage("تحميل التفسير والترجمة...");
       await ensureEditions(true);
       setStage("تجهيز الصوت...");
       await waitAudioReady(15000);
-      if (!ensureAudioGraph()) throw new Error("لا يمكن تسجيل صوت من موقع خارجي. ارفع ملف الصوت يدوياً.");
-      await audioCtx.resume();
-
       const segs = buildSegments();
       if (!segs.length) throw new Error("لا توجد آيات موقّتة في النطاق.");
-      const [w, h] = dims();
-      if (canvas.width !== w || canvas.height !== h) resizeCanvas(w, h);
-
       RT.exportStart = Math.max(0, segs[0].start - 0.3);
       RT.exportEnd = Math.min(segs[segs.length - 1].end + 0.6, audioDuration() || Infinity);
-      const videoTracks = canvas.captureStream(30).getVideoTracks();
-      RT.exportStream = new MediaStream([...videoTracks, ...mediaDest.stream.getAudioTracks()]);
-      RT.exportMime = mime;
-      RT.chunks = [];
+      const [w0, h0] = dims();
+      const w = w0 - (w0 % 2);
+      const h = h0 - (h0 % 2);
+      if (canvas.width !== w || canvas.height !== h) resizeCanvas(w, h);
 
-      const rec = new MediaRecorder(RT.exportStream, {
-        mimeType: mime,
-        videoBitsPerSecond: bitrateFor(w, h),
-        audioBitsPerSecond: 192000,
-      });
-      rec.ondataavailable = (e) => { if (e.data && e.data.size) RT.chunks.push(e.data); };
-      rec.onerror = (e) => abortExport(new Error((e.error && e.error.message) || "خطأ في المسجّل."));
-      rec.onstop = () => finishExport();
-      RT.recorder = rec;
-      RT.exporting = true;
-      setExportUi(true);
-      setKeepScreen(true);
-
-      audio.pause();
-      await seekTo(RT.exportStart);
-      rec.start(1000);
-      await audio.play();
-      setStage("جاري التسجيل. أبقِ الصفحة مفتوحة وفي المقدمة.");
+      const plan = await root().InabaExport.probe(w, h);
+      if (plan.ok && RT.audioBlob && !RT.audioDirect) {
+        try {
+          await runFastExport(w, h, plan.videoCodec);
+          return;
+        } catch (err) {
+          if (RT.cancelled || (err && err.name === "AbortError")) throw err;
+          fallbackNote = `التصدير السريع توقف: ${err.message || "خطأ"}`;
+        }
+      } else {
+        fallbackNote = plan.reason || "الصوت خارجي";
+      }
+      RT.fast = false;
+      await runRealtimeExport(w, h, fallbackNote);
     } catch (err) {
+      if (RT.cancelled || (err && err.name === "AbortError")) {
+        resetExportState();
+        setStage("تم إلغاء التصدير.");
+        renderChecklist();
+        return;
+      }
       abortExport(err);
     }
+  }
+
+  // التصدير السريع: يرسم بسرعة المعالج ويشفّر H.264 وAAC
+  async function runFastExport(w, h, codec) {
+    RT.fast = true;
+    const dur = RT.exportEnd - RT.exportStart;
+    setStage("تجهيز الصوت للتصدير...");
+    const aud = await root().InabaExport.decodeAudioSegment(RT.audioBlob, RT.exportStart, dur, {
+      fullDurationSec: audioDuration(),
+    });
+    if (RT.cancelled) throw abortErr();
+    setStage("جاري التصدير السريع. لا ينتظر مدة المقطع، لكن أبقِ الصفحة مفتوحة.");
+    const sc = buildScene();
+    const blob = await root().InabaExport.encodeMp4({
+      canvas,
+      width: w,
+      height: h,
+      fps: 30,
+      startSec: RT.exportStart,
+      durationSec: dur,
+      bitrate: bitrateFor(w, h),
+      codec,
+      audio: aud,
+      drawFrame: (t) => R.draw(ctx, sc, t),
+      beforeFrame: (t) => seekVideosForExport(sc, t),
+      onProgress: (p, elapsedMs) => setProgress(p, p > 0.02 ? ((elapsedMs / 1000) * (1 - p)) / p : null),
+      isCancelled: () => RT.cancelled,
+    });
+    finishExport(blob, "mp4");
+  }
+
+  function abortErr() {
+    const e = new Error("تم إلغاء التصدير.");
+    e.name = "AbortError";
+    return e;
+  }
+
+  // فيديوهات الخلفية في التصدير السريع: نضبط الزمن لكل إطار (نفس منطق المعاينة: تبدأ من 0 في كل فترة)
+  async function seekVideosForExport(sc, t) {
+    const idx = R.bgIndex(sc.bg, t);
+    for (let i = 0; i < sc.bg.items.length; i++) {
+      const item = sc.bg.items[i];
+      if (item.type !== "video" || !item.el) continue;
+      if (!item.el.paused) item.el.pause();
+      if (i !== idx) continue;
+      const d = item.el.duration;
+      if (!(d > 0)) continue;
+      const target = (t % Math.max(1, sc.bg.interval)) % d;
+      if (Math.abs(item.el.currentTime - target) < 0.02) continue;
+      await new Promise((resolve) => {
+        const el = item.el;
+        const done = () => {
+          clearTimeout(timer);
+          el.removeEventListener("seeked", done);
+          resolve();
+        };
+        const timer = setTimeout(done, 1500);
+        el.addEventListener("seeked", done);
+        el.currentTime = target;
+      });
+    }
+  }
+
+  // التسجيل المباشر (احتياطي): يحتاج مدة المقطع بالكامل، لكنه يعمل على كل المتصفحات
+  async function runRealtimeExport(w, h, note) {
+    const mime = pickMime();
+    if (!mime) throw new Error("متصفحك ما يدعم تسجيل الفيديو. جرّب Chrome أو Edge أو Firefox.");
+    if (!ensureAudioGraph()) throw new Error("لا يمكن تسجيل صوت من موقع خارجي. ارفع ملف الصوت يدوياً.");
+    await audioCtx.resume();
+    const videoTracks = canvas.captureStream(30).getVideoTracks();
+    RT.exportStream = new MediaStream([...videoTracks, ...mediaDest.stream.getAudioTracks()]);
+    RT.exportMime = mime;
+    const chunks = [];
+    RT.chunks = chunks;
+    const rec = new MediaRecorder(RT.exportStream, {
+      mimeType: mime,
+      videoBitsPerSecond: bitrateFor(w, h),
+      audioBitsPerSecond: 192000,
+    });
+    rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+    rec.onerror = (e) => {
+      if (RT.recorder !== rec) return;
+      abortExport(new Error((e.error && e.error.message) || "خطأ في المسجّل."));
+    };
+    rec.onstop = () => {
+      if (RT.recorder !== rec) return; // أُلغي أو فشل قبل ذلك
+      const type = (RT.exportMime || "").split(";")[0] || "video/webm";
+      const blob = new Blob(chunks, { type });
+      resetExportState();
+      if (blob.size < 2000) return abortExport(new Error("الملف الناتج فارغ أو قصير جداً. أعد المحاولة."));
+      finishExport(blob, type === "video/mp4" ? "mp4" : "webm");
+    };
+    RT.recorder = rec;
+    audio.pause();
+    await seekTo(RT.exportStart);
+    rec.start(1000);
+    await audio.play();
+    setStage(note ? `جاري التسجيل المباشر (${note}).` : "جاري التسجيل المباشر. أبقِ الصفحة مفتوحة وفي المقدمة.");
   }
 
   function cancelExport() {
     if (!RT.exporting) return;
     RT.cancelled = true;
-    stopRecording();
+    // حلقة التصدير السريع تلاحظ الإلغاء وتتوقف بنفسها
+    if (RT.fast) return;
+    resetExportState();
     setStage("تم إلغاء التصدير.");
+    renderChecklist();
   }
 
-  function finishExport() {
-    RT.exporting = false;
-    setKeepScreen(false);
-    if (RT.exportStream) RT.exportStream.getTracks().forEach((t) => t.stop());
-    setExportUi(false);
-    if (RT.cancelled) {
-      RT.chunks = [];
-      $("progressBar").style.width = "0%";
-      setStatus("remainingText", "");
-      return;
-    }
-    const type = (RT.exportMime || "").split(";")[0] || "video/webm";
-    const blob = new Blob(RT.chunks, { type });
-    RT.chunks = [];
+  function finishExport(blob, ext) {
+    resetExportState();
     if (blob.size < 2000) return abortExport(new Error("الملف الناتج فارغ أو قصير جداً. أعد المحاولة."));
-    const ext = type === "video/mp4" ? "mp4" : "webm";
-    const name = `inaba-surah-${S.surah}-${S.from}-${S.to}.${ext}`;
+    const name = exportFileName(ext);
     RT.lastBlob = blob;
-    $("progressBar").style.width = "100%";
-    setStatus("remainingText", "");
+    RT.lastName = name;
+    setProgress(1, null);
     showResult(blob, name);
-    setStage("جاهز: الفيديو مُصدَّر.", "ok");
+    setStage("الملف جاهز. اضغط «تحميل الملف» لحفظه في التنزيلات.", "ok");
     STORE.history.add("export", name);
-    if (nativeBridge) saveNative(blob, name);
+    renderChecklist();
+  }
+
+  function formatMegabytes(bytes) {
+    return `${toAr((bytes / 1048576).toFixed(1))} ميغابايت`;
   }
 
   function showResult(blob, name) {
     if (RT.resultUrl) URL.revokeObjectURL(RT.resultUrl);
     RT.resultUrl = URL.createObjectURL(blob);
-    const v = $("resultVideo");
-    v.src = RT.resultUrl;
+    $("resultVideo").src = RT.resultUrl;
     const link = $("downloadLink");
     link.href = RT.resultUrl;
     link.download = name;
-    link.textContent = `تحميل الفيديو (${name.endsWith(".mp4") ? "MP4" : "WebM"})`;
-    $("shareBtn").hidden = !(navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: blob.type })] }));
+    const secs = Math.max(0, RT.exportEnd - RT.exportStart);
+    $("readyName").textContent = name;
+    $("readyMeta").textContent = `${fmt(secs)} · ${formatMegabytes(blob.size)} · ${name.endsWith(".mp4") ? "MP4" : "WebM"}`;
+    const canShare = !!(navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: blob.type })] }));
+    $("shareBtn").hidden = !canShare;
     $("resultBox").hidden = false;
     RT.lastName = name;
+  }
+
+  // زر «تحميل الملف»: على أندرويد يحفظ في التنزيلات، وفي المتصفح ينزل الملف
+  async function downloadResult() {
+    if (!RT.lastBlob) return;
+    if (nativeBridge) return saveNative(RT.lastBlob, RT.lastName);
+    $("downloadLink").click();
+    setStage("بدأ التحميل.", "ok");
   }
 
   async function shareResult() {
@@ -1074,25 +1214,39 @@
   }
 
   function abortExport(err) {
+    resetExportState();
     RT.lastError = err;
-    if (RT.recorder && RT.recorder.state !== "inactive") {
-      RT.cancelled = true;
-      try { RT.recorder.stop(); } catch (_) { /* لا شيء */ }
-    }
-    RT.exporting = false;
-    RT.chunks = [];
-    audio.pause();
-    setKeepScreen(false);
-    if (RT.exportStream) RT.exportStream.getTracks().forEach((t) => t.stop());
-    setExportUi(false);
     $("retryBtn").hidden = false;
-    setStage(`تعذّر التصدير: ${err.message || "خطأ غير معروف"}`, "error");
+    setStage(`تعذّر التصدير: ${(err && err.message) || "خطأ غير معروف"}`, "error");
     renderChecklist();
   }
 
-  // حفظ على جهاز أندرويد (جسر التطبيق)
+  // ---------- جسر أندرويد ----------
+  function nativeCall(method, ...args) {
+    try {
+      if (nativeBridge && typeof nativeBridge[method] === "function") return nativeBridge[method](...args);
+    } catch (_) { /* نسخة قديمة من التطبيق بدون هذه الدالة */ }
+    return null;
+  }
+
   function setKeepScreen(on) {
-    try { if (nativeBridge) nativeBridge.setKeepScreenOn(on); } catch (_) { /* تجاهل */ }
+    nativeCall("setKeepScreenOn", on);
+  }
+
+  function startNativeService() {
+    nativeCall("startExportService", "جاري تجهيز المقطع");
+  }
+
+  function stopNativeService() {
+    nativeCall("stopExportService");
+  }
+
+  let lastNativeNotify = 0;
+  function notifyNativeProgress(p) {
+    const now = Date.now();
+    if (p < 1 && now - lastNativeNotify < 1000) return;
+    lastNativeNotify = now;
+    nativeCall("updateExportService", Math.round(p * 100), p < 1 ? "جاري تجهيز المقطع..." : "الملف جاهز");
   }
 
   function blobToBase64(blob) {
@@ -1105,8 +1259,7 @@
   }
 
   async function saveToDevice(blob, fileName) {
-    const safe = fileName.replace(/[^A-Za-z0-9._-]/g, "_");
-    if (!nativeBridge.beginSave(safe, blob.type)) throw new Error("تعذر بدء الحفظ");
+    if (!nativeBridge.beginSave(fileName, blob.type)) throw new Error("تعذر بدء الحفظ");
     try {
       for (let off = 0; off < blob.size; off += SAVE_CHUNK) {
         const part = await blobToBase64(blob.slice(off, off + SAVE_CHUNK));
@@ -1117,17 +1270,20 @@
       throw err;
     }
     const result = String(nativeBridge.endSave());
-    if (result.startsWith("ERROR")) throw new Error(result);
+    if (result.startsWith("ERROR")) throw new Error(result.replace(/^ERROR:\s*/, ""));
     return result;
   }
 
   async function saveNative(blob, name) {
-    setStage("جاري حفظ الفيديو في جهازك...");
+    $("downloadBtn").disabled = true;
+    setStage("جاري الحفظ في التنزيلات...");
     try {
       const where = await saveToDevice(blob, name);
-      setStage(`تم حفظ الفيديو في: ${where}`, "ok");
+      setStage(`تم الحفظ في التنزيلات: ${where.replace(/^.*\//, "")}`, "ok");
     } catch (err) {
-      setStage("تعذر حفظ الفيديو في الجهاز. استخدم زر التحميل أو أعد المحاولة.", "error");
+      setStage(`تعذّر الحفظ: ${err.message || "خطأ غير معروف"}. جرّب مرة ثانية.`, "error");
+    } finally {
+      $("downloadBtn").disabled = false;
     }
   }
 
@@ -1339,6 +1495,9 @@
   function showView(name) {
     for (const v of document.querySelectorAll("[data-view-panel]")) v.hidden = v.dataset.viewPanel !== name;
     for (const b of document.querySelectorAll("[data-view]")) b.classList.toggle("active", b.dataset.view === name);
+    const inMore = ["reciters", "favorites", "settings", "about"].includes(name);
+    $("moreBtn").classList.toggle("active", inMore);
+    $("moreSheet").hidden = true;
     if (name === "home") renderHome();
     if (name === "drafts") renderDrafts();
     if (name === "library") renderLibrary();
@@ -1521,6 +1680,10 @@
     $("cancelBtn").addEventListener("click", cancelExport);
     $("retryBtn").addEventListener("click", startExport);
     $("shareBtn").addEventListener("click", shareResult);
+    $("downloadBtn").addEventListener("click", downloadResult);
+    $("moreBtn").addEventListener("click", () => { $("moreSheet").hidden = false; });
+    $("sheetClose").addEventListener("click", () => { $("moreSheet").hidden = true; });
+    $("moreSheet").addEventListener("click", (e) => { if (e.target.id === "moreSheet") $("moreSheet").hidden = true; });
 
     // المسودات
     $("saveDraftBtn").addEventListener("click", saveDraft);

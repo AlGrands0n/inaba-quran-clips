@@ -20,9 +20,9 @@ import androidx.webkit.WebViewAssetLoader
  * الشاشة الوحيدة: تعرض صانع المقاطع (ملفات الويب المضمّنة في assets/www).
  *
  * - الملفات بتنحمّل من https://appassets.androidplatform.net عبر WebViewAssetLoader،
- *   فالصفحة بتشتغل بأصل (origin) حقيقي وبتقدر تستخدم fetch وMediaRecorder بشكل طبيعي.
+ *   فالصفحة بتشتغل بأصل (origin) حقيقي وتقدر تستخدم fetch وWebCodecs بشكل طبيعي.
  * - منتقي الملفات (صور، فيديو، صوت) عبر Storage Access Framework، بدون صلاحيات تخزين.
- * - الجسر InabaBridge بيحفظ الفيديو في التنزيلات ويبقي الشاشة مفتوحة أثناء التسجيل.
+ * - الجسر InabaBridge يحفظ الفيديو في التنزيلات ويبقي الشاشة مفتوحة ويشغّل خدمة التصدير.
  */
 class MainActivity : ComponentActivity() {
 
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
-                // المعاينة والتسجيل يبدأون بدون ضغطة من المستخدم
+                // المعاينة والتصدير يبدآن بدون ضغطة من المستخدم
                 mediaPlaybackRequiresUserGesture = false
                 allowFileAccess = false
                 allowContentAccess = false
@@ -84,7 +84,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        webView.onPause()
+        // أثناء التصدير ما نوقف الصفحة: خدمة التصدير الأمامية تمنع إيقاف العملية
+        if (!ExportService.running) webView.onPause()
         super.onPause()
     }
 
