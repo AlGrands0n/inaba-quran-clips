@@ -23,16 +23,6 @@
       "author": "goldpicasa"
     },
     {
-      "id": "commons-121004-m-aq224-046-8077768713",
-      "title": "121004-M-AQ224-046 (8077768713)",
-      "category": "nightsky",
-      "type": "image",
-      "file": "nightsky/121004-m-aq224-046-8077768713.jpg",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:121004-M-AQ224-046_(8077768713).jpg",
-      "author": "U.S. Department of Defense Current Photos"
-    },
-    {
       "id": "commons-151473-dry-leaves-pikiwiki-israel",
       "title": "151473 dry leaves PikiWiki Israel",
       "category": "nature",
@@ -285,9 +275,9 @@
     {
       "id": "commons-graceful-birds-in-the-sky-amazing-bird-sound-user-free-video",
       "title": "Graceful Birds in the Sky-Amazing Bird Sound-User FREE Videos",
-      "category": "mountains",
+      "category": "nature",
       "type": "video",
-      "file": "mountains/graceful-birds-in-the-sky-amazing-bird-sound-user-free-video.mp4",
+      "file": "nature/graceful-birds-in-the-sky-amazing-bird-sound-user-free-video.mp4",
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
       "source": "https://commons.wikimedia.org/wiki/File:Graceful_Birds_in_the_Sky-Amazing_Bird_Sound-User_FREE_Videos.webm",
       "author": "Earthwild TV"
@@ -301,16 +291,6 @@
       "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
       "source": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_National_Park_Bright_and_Colorful_-_After_a_Gentle_Rain_(13115283315).webm",
       "author": "Grand Canyon National Park"
-    },
-    {
-      "id": "commons-gravity-waves-ripple-over-lake-superior-cira-2025-01-16-nola",
-      "title": "Gravity Waves Ripple Over Lake Superior (CIRA 2025-01-16 - nolabels)",
-      "category": "oceans",
-      "type": "video",
-      "file": "oceans/gravity-waves-ripple-over-lake-superior-cira-2025-01-16-nola.mp4",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Gravity_Waves_Ripple_Over_Lake_Superior_(CIRA_2025-01-16_-_nolabels).webm",
-      "author": "GOES imagery: CSU/CIRA & NOAA"
     },
     {
       "id": "commons-hungate-canyon-in-washington",
@@ -401,26 +381,6 @@
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
       "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_-_Caihm_(1).jpg",
       "author": "Caihm"
-    },
-    {
-      "id": "commons-september-27-2015-total-lunar-eclipse-view-from-the-moon",
-      "title": "September 27, 2015 Total Lunar Eclipse- View from the Moon",
-      "category": "sunrise",
-      "type": "video",
-      "file": "sunrise/september-27-2015-total-lunar-eclipse-view-from-the-moon.mp4",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:September_27,_2015_Total_Lunar_Eclipse-_View_from_the_Moon.webm",
-      "author": "NASA Scientific Visualization Studio"
-    },
-    {
-      "id": "commons-tess-completes-its-primary-mission-uoxutlpalzi",
-      "title": "TESS Completes its Primary Mission uOxuTLPAlzI",
-      "category": "stars",
-      "type": "video",
-      "file": "stars/tess-completes-its-primary-mission-uoxutlpalzi.mp4",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:TESS_Completes_its_Primary_Mission_uOxuTLPAlzI.webm",
-      "author": "NASA Goddard"
     }
   ]
 }

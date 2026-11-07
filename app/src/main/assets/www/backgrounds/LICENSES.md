@@ -25,7 +25,6 @@
 |---|---|---|---|---|---|
 | 08020047 | غابات | صورة | Catalina Holguin | Public domain — https://creativecommons.org/publicdomain/mark/1.0/ | https://commons.wikimedia.org/wiki/File:08020047.JPG |
 | 08040 Baunei, Province of Ogliastra, Italy - panoramio (2) | محيطات وبحار | صورة | goldpicasa | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:08040_Baunei,_Province_of_Ogliastra,_Italy_-_panoramio_(2).jpg |
-| 121004-M-AQ224-046 (8077768713) | سماء ليلية | صورة | U.S. Department of Defense Current Photos | Public domain — https://creativecommons.org/publicdomain/mark/1.0/ | https://commons.wikimedia.org/wiki/File:121004-M-AQ224-046_(8077768713).jpg |
 | 151473 dry leaves PikiWiki Israel | طبيعة | صورة | דרור פייטלסון | CC BY 2.5 — https://creativecommons.org/licenses/by/2.5/ | https://commons.wikimedia.org/wiki/File:151473_dry_leaves_PikiWiki_Israel.jpg |
 | 2011-08-27 22-23-58-nightscape-under-clouds | سماء ليلية | صورة | Thomas Bresson | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:2011-08-27_22-23-58-nightscape-under-clouds.jpg |
 | 2011-08-27 22-34-12-iridium-flare | سماء ليلية | صورة | Thomas Bresson | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:2011-08-27_22-34-12-iridium-flare.jpg |
@@ -51,9 +50,8 @@
 | Desolation Creek in Oregon, USA | غابات | فيديو | Ecotrust | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:Desolation_Creek_in_Oregon,_USA.webm |
 | ESOcast 63 | سماء ليلية | فيديو | ESO | CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/ | https://commons.wikimedia.org/wiki/File:ESOcast_63.webm |
 | Goats in Sunnyvale | طبيعة | فيديو | Kat Walsh | CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/ | https://commons.wikimedia.org/wiki/File:Goats_in_Sunnyvale.webm |
-| Graceful Birds in the Sky-Amazing Bird Sound-User FREE Videos | جبال | فيديو | Earthwild TV | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:Graceful_Birds_in_the_Sky-Amazing_Bird_Sound-User_FREE_Videos.webm |
+| Graceful Birds in the Sky-Amazing Bird Sound-User FREE Videos | طبيعة | فيديو | Earthwild TV | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:Graceful_Birds_in_the_Sky-Amazing_Bird_Sound-User_FREE_Videos.webm |
 | Grand Canyon National Park Bright and Colorful - After a Gentle Rain (13115283315) | مطر | فيديو | Grand Canyon National Park | CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/ | https://commons.wikimedia.org/wiki/File:Grand_Canyon_National_Park_Bright_and_Colorful_-_After_a_Gentle_Rain_(13115283315).webm |
-| Gravity Waves Ripple Over Lake Superior (CIRA 2025-01-16 - nolabels) | محيطات وبحار | فيديو | GOES imagery: CSU/CIRA & NOAA | Public domain — https://creativecommons.org/publicdomain/mark/1.0/ | https://commons.wikimedia.org/wiki/File:Gravity_Waves_Ripple_Over_Lake_Superior_(CIRA_2025-01-16_-_nolabels).webm |
 | Hungate Canyon in Washington | صحاري | فيديو | Bureau of Land Management Oregon and Washington | CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/ | https://commons.wikimedia.org/wiki/File:Hungate_Canyon_in_Washington.webm |
 | -i---i- (24196687643) | نجوم | صورة | MATHIAS, M H from Guaratinguetá, Brasil | CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/ | https://commons.wikimedia.org/wiki/File:-i---i-_(24196687643).jpg |
 | မိုးတိမ်တိုက် | غيوم | فيديو | စာကလေး | CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/ | https://commons.wikimedia.org/wiki/File:%E1%80%99%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%90%E1%80%AD%E1%80%99%E1%80%BA%E1%80%90%E1%80%AD%E1%80%AF%E1%80%80%E1%80%BA.webm |
@@ -63,6 +61,4 @@
 | - panoramio (2538) | غابات | صورة | sai aneesh | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:-_panoramio_(2538).jpg |
 | - panoramio (4047) | غابات | صورة | tomyst | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:-_panoramio_(4047).jpg |
 | - panoramio - Caihm (1) | شلالات | صورة | Caihm | CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ | https://commons.wikimedia.org/wiki/File:-_panoramio_-_Caihm_(1).jpg |
-| September 27, 2015 Total Lunar Eclipse- View from the Moon | شروق | فيديو | NASA Scientific Visualization Studio | Public domain — https://creativecommons.org/publicdomain/mark/1.0/ | https://commons.wikimedia.org/wiki/File:September_27,_2015_Total_Lunar_Eclipse-_View_from_the_Moon.webm |
-| TESS Completes its Primary Mission uOxuTLPAlzI | نجوم | فيديو | NASA Goddard | Public domain — https://creativecommons.org/publicdomain/mark/1.0/ | https://commons.wikimedia.org/wiki/File:TESS_Completes_its_Primary_Mission_uOxuTLPAlzI.webm |
 <!-- AUTO:END -->
