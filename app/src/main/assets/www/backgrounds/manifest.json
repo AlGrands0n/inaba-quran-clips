@@ -23,33 +23,43 @@
       "author": "goldpicasa"
     },
     {
-      "id": "commons-2011-07-29-deep-sky-7",
-      "title": "2011-07-29-deep-sky-7",
+      "id": "commons-151473-dry-leaves-pikiwiki-israel",
+      "title": "151473 dry leaves PikiWiki Israel",
+      "category": "nature",
+      "type": "image",
+      "file": "nature/151473-dry-leaves-pikiwiki-israel.jpg",
+      "license": "CC BY 2.5 — https://creativecommons.org/licenses/by/2.5/",
+      "source": "https://commons.wikimedia.org/wiki/File:151473_dry_leaves_PikiWiki_Israel.jpg",
+      "author": "דרור פייטלסון"
+    },
+    {
+      "id": "commons-160316-f-yg608-296-25985448435",
+      "title": "160316-F-YG608-296 (25985448435)",
       "category": "nightsky",
       "type": "image",
-      "file": "nightsky/2011-07-29-deep-sky-7.jpg",
+      "file": "nightsky/160316-f-yg608-296-25985448435.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:160316-F-YG608-296_(25985448435).jpg",
+      "author": "U.S. Department of Defense Current Photos Staff Sgt. Kate Thornton/Combined Joint Task Force - Horn"
+    },
+    {
+      "id": "commons-2011-08-27-22-23-58-nightscape-under-clouds",
+      "title": "2011-08-27 22-23-58-nightscape-under-clouds",
+      "category": "nightsky",
+      "type": "image",
+      "file": "nightsky/2011-08-27-22-23-58-nightscape-under-clouds.jpg",
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:2011-07-29-deep-sky-7.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:2011-08-27_22-23-58-nightscape-under-clouds.jpg",
       "author": "Thomas Bresson"
     },
     {
-      "id": "commons-2011-07-29-deep-sky-8",
-      "title": "2011-07-29-deep-sky-8",
+      "id": "commons-2011-08-27-22-34-12-iridium-flare",
+      "title": "2011-08-27 22-34-12-iridium-flare",
       "category": "nightsky",
       "type": "image",
-      "file": "nightsky/2011-07-29-deep-sky-8.jpg",
+      "file": "nightsky/2011-08-27-22-34-12-iridium-flare.jpg",
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:2011-07-29-deep-sky-8.jpg",
-      "author": "Thomas Bresson"
-    },
-    {
-      "id": "commons-2011-07-29-deep-sky-8-2",
-      "title": "2011-07-29-deep-sky-8-2",
-      "category": "nightsky",
-      "type": "image",
-      "file": "nightsky/2011-07-29-deep-sky-8-2.jpg",
-      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:2011-07-29-deep-sky-8-2.jpg",
+      "source": "https://commons.wikimedia.org/wiki/File:2011-08-27_22-34-12-iridium-flare.jpg",
       "author": "Thomas Bresson"
     },
     {
@@ -113,6 +123,26 @@
       "author": "William Kay"
     },
     {
+      "id": "commons-500px-photo-32815753",
+      "title": "500px photo (32815753)",
+      "category": "oceans",
+      "type": "image",
+      "file": "oceans/500px-photo-32815753.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(32815753).jpeg",
+      "author": "Justin Ornellas"
+    },
+    {
+      "id": "commons-500px-photo-44617892",
+      "title": "500px photo (44617892)",
+      "category": "sunrise",
+      "type": "image",
+      "file": "sunrise/500px-photo-44617892.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(44617892).jpeg",
+      "author": "Sascha Erni"
+    },
+    {
       "id": "commons-500px-photo-61931629",
       "title": "500px photo (61931629)",
       "category": "waterfalls",
@@ -121,6 +151,16 @@
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
       "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(61931629).jpeg",
       "author": "Vincent Yuen"
+    },
+    {
+      "id": "commons-88-constellations-piece-13h25m0-1693-cc",
+      "title": "88 Constellations Piece (13h25m0-1693-CC)",
+      "category": "stars",
+      "type": "image",
+      "file": "stars/88-constellations-piece-13h25m0-1693-cc.jpg",
+      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:88_Constellations_Piece_(13h25m0-1693-CC).jpg",
+      "author": "NOIRLab/NSF/AURA/E. Slawik"
     },
     {
       "id": "commons-a-scenic-view-of-lands-on-the-desert",
@@ -193,16 +233,6 @@
       "author": "Anthony DELANOIX anthonydelanoix"
     },
     {
-      "id": "commons-around-the-gro-glockner-3-798-m",
-      "title": "Around the Großglockner (3,798 m)",
-      "category": "mountains",
-      "type": "video",
-      "file": "mountains/around-the-gro-glockner-3-798-m.mp4",
-      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Around_the_Gro%C3%9Fglockner_(3,798_m).webm",
-      "author": "Upabjojr"
-    },
-    {
       "id": "commons-as09-20-3175-21317153313",
       "title": "AS09-20-3175 (21317153313)",
       "category": "sunrise",
@@ -211,26 +241,6 @@
       "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
       "source": "https://commons.wikimedia.org/wiki/File:AS09-20-3175_(21317153313).jpg",
       "author": "Project Apollo Archive"
-    },
-    {
-      "id": "commons-balance-and-strength-3853768707",
-      "title": "Balance and Strength (3853768707)",
-      "category": "sunrise",
-      "type": "image",
-      "file": "sunrise/balance-and-strength-3853768707.jpg",
-      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Balance_and_Strength_(3853768707).jpg",
-      "author": "Jasmin Hunter from Portsmouth, NH, United States"
-    },
-    {
-      "id": "commons-hands-4650623766",
-      "title": "Hands (4650623766)",
-      "category": "nature",
-      "type": "image",
-      "file": "nature/hands-4650623766.jpg",
-      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Hands_(4650623766).jpg",
-      "author": "David DeHetre from Lawrence, KS, USA, United States"
     },
     {
       "id": "commons-i-i-24196687643",
@@ -273,26 +283,6 @@
       "author": "Peter A. Andersen"
     },
     {
-      "id": "commons-nascer-do-sol-em-piracicaba-24-06-2023",
-      "title": "Nascer do sol em Piracicaba 24-06-2023",
-      "category": "sunrise",
-      "type": "video",
-      "file": "sunrise/nascer-do-sol-em-piracicaba-24-06-2023.mp4",
-      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Nascer_do_sol_em_Piracicaba_24-06-2023.webm",
-      "author": "A.O Mapping"
-    },
-    {
-      "id": "commons-never-quite-the-same",
-      "title": "NEVER QUITE THE SAME",
-      "category": "oceans",
-      "type": "image",
-      "file": "oceans/never-quite-the-same.jpg",
-      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:NEVER_QUITE_THE_SAME.png",
-      "author": "Raymondsroad"
-    },
-    {
       "id": "commons-panoramio-2538",
       "title": "- panoramio (2538)",
       "category": "forests",
@@ -321,46 +311,6 @@
       "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
       "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_-_Caihm_(1).jpg",
       "author": "Caihm"
-    },
-    {
-      "id": "commons-starless-core-l1014",
-      "title": "\"Starless\" Core L1014",
-      "category": "stars",
-      "type": "image",
-      "file": "stars/starless-core-l1014.jpg",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:%22Starless%22_Core_L1014.jpg",
-      "author": "NASA/JPL-Caltech/N. Evans (Univ. of Texas at Austin)/DSS"
-    },
-    {
-      "id": "commons-tripoloskifotografiallc-1",
-      "title": "TriPoloskiFotografiaLLC 1",
-      "category": "clouds",
-      "type": "image",
-      "file": "clouds/tripoloskifotografiallc-1.jpg",
-      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:TriPoloskiFotografiaLLC_1.jpg",
-      "author": "TriPoloskiFotografiaLLC"
-    },
-    {
-      "id": "commons-tripoloskifotografiallc-3",
-      "title": "TriPoloskiFotografiaLLC 3",
-      "category": "clouds",
-      "type": "image",
-      "file": "clouds/tripoloskifotografiallc-3.jpg",
-      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:TriPoloskiFotografiaLLC_3.jpg",
-      "author": "TriPoloskiFotografiaLLC"
-    },
-    {
-      "id": "commons-two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la",
-      "title": "Two slender stems with leaf clusters against a cloudy sky, Lan Su Chinese Garden",
-      "category": "clouds",
-      "type": "image",
-      "file": "clouds/two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la.jpg",
-      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Two_slender_stems_with_leaf_clusters_against_a_cloudy_sky,_Lan_Su_Chinese_Garden.jpg",
-      "author": "Z3lvs"
     }
   ]
 }
