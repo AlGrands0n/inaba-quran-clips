@@ -286,6 +286,8 @@
     }
     const el = item.el;
     if (!el) return;
+    // فيديو لم يفكّ إطاره بعد: لا نرسمه، لأن الإطار الفارغ أو غير المكتمل قد يخرج ملوّناً بالخطأ في التصدير
+    if (item.type === "video" && el.readyState < 2) return;
     const sw = item.type === "video" ? el.videoWidth : el.naturalWidth;
     const sh = item.type === "video" ? el.videoHeight : el.naturalHeight;
     if (!sw || !sh) return;

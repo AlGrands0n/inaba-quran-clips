@@ -618,7 +618,7 @@
       el.muted = true;
       el.loop = true;
       el.playsInline = true;
-      el.preload = "auto";
+      el.preload = "metadata"; // الفك يبدأ عند التشغيل أو الضبط فقط، فلا تُفتح كل الخلفيات مفككات معاً
       el.src = url;
     } else {
       el = new Image();
@@ -1092,6 +1092,19 @@
   }
 
   // فيديوهات الخلفية في التصدير السريع: نضبط الزمن لكل إطار (نفس منطق المعاينة: تبدأ من 0 في كل فترة)
+  // ينتظر أحد الأحداث أو المهلة أيهما أسبق، حتى لا يتعلّق التصدير إذا توقف الفيديو
+  function waitMediaEvents(el, names, timeoutMs) {
+    return new Promise((resolve) => {
+      const done = () => {
+        clearTimeout(timer);
+        for (const n of names) el.removeEventListener(n, done);
+        resolve();
+      };
+      const timer = setTimeout(done, timeoutMs);
+      for (const n of names) el.addEventListener(n, done);
+    });
+  }
+
   async function seekVideosForExport(sc, t) {
     const idx = R.bgIndex(sc.bg, t);
     for (let i = 0; i < sc.bg.items.length; i++) {
@@ -1099,21 +1112,15 @@
       if (item.type !== "video" || !item.el) continue;
       if (!item.el.paused) item.el.pause();
       if (i !== idx) continue;
+      if (item.el.readyState < 1) await waitMediaEvents(item.el, ["loadedmetadata"], 3000);
       const d = item.el.duration;
       if (!(d > 0)) continue;
       const target = (t % Math.max(1, sc.bg.interval)) % d;
-      if (Math.abs(item.el.currentTime - target) < 0.02) continue;
-      await new Promise((resolve) => {
-        const el = item.el;
-        const done = () => {
-          clearTimeout(timer);
-          el.removeEventListener("seeked", done);
-          resolve();
-        };
-        const timer = setTimeout(done, 1500);
-        el.addEventListener("seeked", done);
-        el.currentTime = target;
-      });
+      if (Math.abs(item.el.currentTime - target) < 0.02 && item.el.readyState >= 2) continue;
+      // ننتظر اكتمال الضبط وتوفّر إطار مفكوك قبل الرسم؛ بعد المهلة نكمل والرسّام يتخطى هذا الإطار
+      const ready = waitMediaEvents(item.el, ["seeked", "loadeddata"], 2000);
+      item.el.currentTime = target;
+      await ready;
     }
   }
 
@@ -1174,12 +1181,8 @@
     showResult(blob, name);
     STORE.history.add("export", name);
     renderChecklist();
-    // على أندرويد: كل مقطع يُحفظ تلقائياً في التنزيلات فور انتهائه
-    if (nativeBridge) {
-      saveNative(blob, name);
-    } else {
-      setStage("الملف جاهز. اضغط «تحميل الملف» لحفظه.", "ok");
-    }
+    // لا حفظ تلقائي: الملف يبقى في المعاينة حتى يضغط المستخدم زر الحفظ
+    setStage(nativeBridge ? "الملف جاهز. اضغط «حفظ في التنزيلات» لحفظه." : "الملف جاهز. اضغط «تحميل الملف» لحفظه.", "ok");
   }
 
   function formatMegabytes(bytes) {
@@ -1513,9 +1516,20 @@
   // ---------- المظهر والتنقل بين الصفحات ----------
   function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
-    $("themeBtn").textContent = theme === "light" ? "☾ داكن" : "☀ فاتح";
     STORE.prefs.set({ theme });
   }
+
+  // عناوين الشريط العلوي لكل شاشة
+  const VIEW_TITLES = {
+    create: "إنشاء مقطع",
+    home: "الرئيسية",
+    drafts: "مشاريعي",
+    library: "المكتبة",
+    reciters: "القرّاء",
+    favorites: "المفضلة",
+    settings: "الإعدادات",
+    about: "عن التطبيق",
+  };
 
   function showView(name) {
     for (const v of document.querySelectorAll("[data-view-panel]")) v.hidden = v.dataset.viewPanel !== name;
@@ -1523,6 +1537,9 @@
     const inMore = ["reciters", "favorites", "settings", "about"].includes(name);
     $("moreBtn").classList.toggle("active", inMore);
     $("moreSheet").hidden = true;
+    $("appTitle").textContent = VIEW_TITLES[name] || "إنابة";
+    $("newProjectBtn").hidden = name !== "create";
+    if (name !== "library") closeLibPreview();
     if (name === "home") renderHome();
     if (name === "drafts") renderDrafts();
     if (name === "library") renderLibrary();
@@ -1555,7 +1572,6 @@
     document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
     document.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => goStep(Number(b.dataset.step))));
     document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => goStep(Number(b.dataset.go))));
-    $("themeBtn").addEventListener("click", () => applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light"));
 
     // البحث
     let searchTimer = null;
@@ -1871,8 +1887,9 @@
 
   function cardHtml(i) {
     const src = esc(LIB.itemUrl(i));
+    // لا <video> في البطاقة: كل فيديو يفتح مفكّكاً في الجهاز، فنعرض بطاقة بدلاً من الإطار
     const media = i.type === "video"
-      ? `<video class="media" src="${src}" muted playsinline preload="metadata"></video>`
+      ? `<div class="media video" role="img" aria-label="${esc(i.title)}"><span class="play" aria-hidden="true">▶</span><span>فيديو</span></div>`
       : `<img class="media" src="${src}" alt="${esc(i.title)}" loading="lazy">`;
     return `<article class="lib-card" data-id="${esc(i.id)}">
       ${media}
@@ -1904,11 +1921,24 @@
       : `<span class="hint">لا شيء بعد.</span>`;
   }
 
+  // يفرّغ المعاينة ويوقف فك الفيديو فيها (كل <video> مفتوح يشغل مفككاً في الجهاز)
+  function closeLibPreview() {
+    const box = $("libPreview");
+    for (const v of box.querySelectorAll("video")) {
+      v.pause();
+      v.removeAttribute("src");
+      v.load();
+    }
+    box.innerHTML = "";
+    box.hidden = true;
+  }
+
   function previewLibrary(item) {
+    closeLibPreview();
     const box = $("libPreview");
     const src = esc(LIB.itemUrl(item));
     const media = item.type === "video"
-      ? `<video src="${src}" controls muted loop playsinline></video>`
+      ? `<video src="${src}" controls muted loop playsinline preload="metadata"></video>`
       : `<img src="${src}" alt="${esc(item.title)}">`;
     box.innerHTML = `${media}
       <strong>${esc(item.title)}</strong>
@@ -2221,12 +2251,10 @@
 
   // ---------- ربط أزرار الصفحات الجديدة ----------
   function bindPages() {
-    document.querySelectorAll("[data-go-view]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.goView)));
-
-    // الرئيسية والمشروع الجديد
-    [$("homeNewBtn"), $("newProjectBtn")].forEach((btn) => btn.addEventListener("click", () => {
-      if (confirmTwice(btn, "تأكيد؟ يفرغ المحرر")) newProject();
-    }));
+    // المشروع الجديد (زر الشريط العلوي، يظهر في شاشة الإنشاء فقط)
+    $("newProjectBtn").addEventListener("click", () => {
+      if (confirmTwice($("newProjectBtn"), "تأكيد؟ يفرغ المحرر")) newProject();
+    });
     $("homeDrafts").addEventListener("click", (e) => {
       const b = e.target.closest('button[data-act="open"]');
       if (b) openDraft(b.closest("li").dataset.id);
@@ -2245,7 +2273,7 @@
       const btn = e.target.closest("button[data-act]");
       if (!btn) return;
       if (btn.dataset.act === "lib-close") {
-        $("libPreview").hidden = true;
+        closeLibPreview();
         return;
       }
       const holder = btn.closest("[data-id]");
@@ -2327,6 +2355,7 @@
   function init() {
     const hadFiles = restoreEditor();
     applyTheme(STORE.prefs.get().theme === "light" ? "light" : "dark");
+    $("downloadBtn").textContent = nativeBridge ? "حفظ في التنزيلات" : "تحميل الملف";
     bindControls();
     bindPages();
     syncInputs();
