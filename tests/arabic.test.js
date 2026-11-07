@@ -75,3 +75,12 @@ test("typo budget grows with word length", () => {
   assert.equal(A.allowedEdits("كتاب"), 1);
   assert.equal(A.allowedEdits("مكتبهات"), 2);
 });
+
+test("plainName removes tashkeel and the سورة prefix for file names", () => {
+  // اسم تجريبي بنفس الشكل (ليس نصاً قرآنياً منقولاً من الذاكرة)
+  assert.equal(A.plainName("سُورَةُ ٱلْمِثَالِ"), "المثال");
+  assert.equal(A.plainName("سُورَةُ ٱلْبَيْتِ"), "البيت");
+  assert.equal(A.plainName("  اسم بلا تشكيل  "), "اسم بلا تشكيل");
+  assert.equal(A.plainName(""), "");
+  assert.equal(A.plainName(null), "");
+});

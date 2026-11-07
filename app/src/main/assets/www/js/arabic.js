@@ -111,7 +111,18 @@
     return results.slice(0, limit);
   }
 
-  const api = { normalize, withinEdits, allowedEdits, buildIndex, search };
+  // اسم السورة للعرض وأسماء الملفات: بدون تشكيل، وبدون كلمة «سورة» في البداية.
+  // مثال: «سُورَةُ ٱلْفَاتِحَةِ» -> «الفاتحة». الاسم يبقى بالحروف الأصلية (لا نطبّع ة/ى).
+  function plainName(text) {
+    return String(text || "")
+      .replace(MARKS, "")
+      .replace(/ٱ/g, "ا")
+      .replace(/^\s*سورة\s+/, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  const api = { normalize, plainName, withinEdits, allowedEdits, buildIndex, search };
   root.InabaArabic = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

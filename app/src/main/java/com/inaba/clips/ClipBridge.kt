@@ -16,7 +16,8 @@ import java.io.OutputStream
  * جسر بين صفحة الويب والتطبيق (window.InabaBridge).
  *
  * الملف المُصدَّر يوصل من الصفحة على شكل أجزاء base64، نكتبه بملف مؤقت في الكاش،
- * وبعدين ننقله لمجلد التنزيلات الرسمي (Download) عبر MediaStore، بنفس الاسم العربي.
+ * وبعدين ننقله لمجلد داخل التنزيلات باسم التطبيق (Download/صانع المقاطع القرآنية) عبر MediaStore،
+ * بنفس الاسم العربي. MediaStore ينشئ المجلد تلقائياً، ولا يحتاج صلاحية تخزين على أندرويد 10 فما فوق.
  *
  * ملاحظة: كل الدوال هنا ترجّع قيم ولا ترمي استثناءات، لأن الاستثناء داخل JavascriptInterface
  * ممكن يوقّف التطبيق.
@@ -151,13 +152,22 @@ class ClipBridge(private val host: MainActivity) {
         else -> null
     }
 
-    /** يرجّع اسم الملف النهائي بعد الحفظ (النظام قد يضيف رقماً إذا كان الاسم مستخدماً). */
+    /** اسم المجلد داخل التنزيلات = اسم التطبيق من strings.xml، بدون أحرف ممنوعة في أسماء المجلدات. */
+    private fun appFolder(): String =
+        host.getString(R.string.app_name)
+            .replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .ifEmpty { "مقاطع قرآنية" }
+
+    /** يرجّع مسار الملف النهائي داخل التنزيلات (النظام قد يضيف رقماً إذا كان الاسم مستخدماً). */
     private fun publishToDownloads(file: File, name: String, mime: String): String {
         val resolver = host.contentResolver
+        val folder = "${Environment.DIRECTORY_DOWNLOADS}/${appFolder()}"
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, name)
             put(MediaStore.Downloads.MIME_TYPE, mime)
-            put(MediaStore.Downloads.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/")
+            put(MediaStore.Downloads.RELATIVE_PATH, "$folder/")
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
@@ -175,7 +185,7 @@ class ClipBridge(private val host: MainActivity) {
             val finalName = resolver.query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)
                 ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
                 ?: name
-            "${Environment.DIRECTORY_DOWNLOADS}/$finalName"
+            "$folder/$finalName"
         } catch (e: Exception) {
             resolver.delete(uri, null, null)
             "ERROR: ${e.message ?: "تعذر الكتابة"}"

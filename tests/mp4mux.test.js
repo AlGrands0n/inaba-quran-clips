@@ -69,6 +69,19 @@ function avcCFromSps(sps, pps) {
   ]);
 }
 
+// أنواع الصناديق في المستوى الأعلى بالترتيب (ftyp ثم moov ثم mdat في التخطيط الكلاسيكي)
+function topBoxTypes(buf) {
+  const types = [];
+  let p = 0;
+  while (p + 8 <= buf.length) {
+    const size = buf.readUInt32BE(p);
+    types.push(buf.toString("latin1", p + 4, p + 8));
+    if (size < 8) break;
+    p += size;
+  }
+  return types;
+}
+
 const AAC_RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
 
 // يقرأ إطارات ADTS ويعيد الإطارات الخام مع AudioSpecificConfig
@@ -187,6 +200,44 @@ test("mp4 writer output is accepted by ffprobe and decodes without errors", { sk
   const dec = spawnSync("ffmpeg", ["-v", "error", "-i", out, "-f", "null", "-"], { encoding: "utf8" });
   assert.equal(dec.status, 0);
   assert.equal(dec.stderr.trim(), "", "لا أخطاء فك");
+
+  // التخطيط الكلاسيكي: الصناديق العليا بهذا الترتيب، والمدة معروفة من الـ moov
+  const bytes = Buffer.from(await blob.arrayBuffer());
+  assert.deepEqual(topBoxTypes(bytes), ["ftyp", "moov", "mdat"]);
+  const fmt = JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "json", out]).toString());
+  assert.ok(Math.abs(Number(fmt.format.duration) - 1) < 0.1, `المدة ${fmt.format.duration} قريبة من ثانية واحدة`);
+});
+
+test("mp4 writer without audio produces a valid video-only file", { skip }, async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "mp4mux-v-"));
+  const { h264 } = makeSources(dir);
+  const nals = splitAnnexB(h264);
+  const aus = toAccessUnits(nals);
+  const sps = nals.find((n) => (n[0] & 31) === 7);
+  const pps = nals.find((n) => (n[0] & 31) === 8);
+
+  const writer = M.createMp4Writer({ width: 320, height: 240, avcC: new Uint8Array(avcCFromSps(sps, pps)), audio: null });
+  const vTicks = M.VIDEO_TIMESCALE / 30;
+  aus.forEach((au, i) => {
+    const data = new Uint8Array(Buffer.concat(au.filter((n) => ![7, 8].includes(n[0] & 31)).map((n) => {
+      const len = Buffer.alloc(4);
+      len.writeUInt32BE(n.length);
+      return Buffer.concat([len, Buffer.from(n)]);
+    })));
+    writer.addVideo(data, i * vTicks, vTicks, au.some((n) => (n[0] & 31) === 5));
+  });
+  const out = path.join(dir, "video-only.mp4");
+  fs.writeFileSync(out, Buffer.from(await writer.finish().arrayBuffer()));
+
+  const info = JSON.parse(execFileSync("ffprobe", [
+    "-v", "error", "-show_entries", "stream=codec_type,nb_read_packets", "-count_packets", "-of", "json", out,
+  ]).toString());
+  assert.equal(info.streams.length, 1);
+  assert.equal(info.streams[0].codec_type, "video");
+  assert.equal(Number(info.streams[0].nb_read_packets), aus.length);
+  const dec = spawnSync("ffmpeg", ["-v", "error", "-i", out, "-f", "null", "-"], { encoding: "utf8" });
+  assert.equal(dec.status, 0);
+  assert.equal(dec.stderr.trim(), "");
 });
 
 test("mp3 index finds frames and slices on frame boundaries", { skip }, async () => {

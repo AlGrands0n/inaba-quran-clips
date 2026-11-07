@@ -10,7 +10,6 @@
 
   const MP4 = root.InabaMp4 || (typeof require === "function" ? require("./mp4mux.js") : null);
   const SAMPLE_RATE = 48000;
-  const FRAGMENT_SECONDS = 1;
   const PREROLL_SEC = 1;
   const MAX_DECODED_BYTES = 350 * 1024 * 1024;
 
@@ -138,9 +137,7 @@
     let writer = null;
     let failed = null;
     let lastV = -1;
-    let vOut = 0;
     let aOut = 0;
-    let lastFlush = 0;
     let audioFed = 0;
     const startedAt = performance.now();
 
@@ -150,7 +147,6 @@
         width,
         height,
         avcC: meta.avcC,
-        durationMs: Math.round(durationSec * 1000),
         audio: audio ? { sampleRate: sr, channels: 2, asc: meta.asc } : null,
       });
       for (const s of pendV) writer.addVideo(s.data, s.dts, s.dur, s.key);
@@ -169,7 +165,6 @@
         // بدون B-frames الترتيب يبقى تصاعدياً. إذا لا، الملف سيكون خاطئاً، فنوقف ونرجع للتسجيل المباشر
         if (dts <= lastV) failed = failed || new Error("ترتيب الإطارات غير متوقع.");
         lastV = dts;
-        vOut++;
         const s = { data, dts, dur: frameTicks, key: chunk.type === "key" };
         if (writer) writer.addVideo(s.data, s.dts, s.dur, s.key);
         else pendV.push(s);
@@ -223,18 +218,6 @@
       }
     }
 
-    // نكتب فقط العينات التي لن يأتي قبلها شيء من المشفّر
-    function maybeFlush() {
-      if (!writer) return;
-      const v = (vOut * frameTicks) / MP4.VIDEO_TIMESCALE;
-      const a = audio ? (aOut * MP4.AAC_FRAME) / sr : Infinity;
-      const bound = Math.min(v, a);
-      if (bound - lastFlush >= FRAGMENT_SECONDS) {
-        writer.flush(bound);
-        lastFlush = bound;
-      }
-    }
-
     const check = () => {
       if (failed) throw failed;
       if (o.isCancelled && o.isCancelled()) throw abortError();
@@ -250,7 +233,6 @@
         vEnc.encode(vf, { keyFrame: i % keyEvery === 0 });
         vf.close();
         feedAudio(((i + 1) / fps) * sr);
-        maybeFlush();
         // ضغط خلفي: ما نترك المشفّر يتراكم في الذاكرة
         while (vEnc.encodeQueueSize > 4 || (aEnc && aEnc.encodeQueueSize > 16)) {
           check();

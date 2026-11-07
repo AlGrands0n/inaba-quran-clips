@@ -882,13 +882,15 @@
   }
 
   // ---------- التصدير ----------
+  // التسجيل المباشر يفضّل WebM: MediaRecorder يكتب MP4 مجزّأً (fragmented) فلا تفهمه معظم
+  // تطبيقات المعرض ومدراء الملفات. الامتداد يتبع الصيغة الفعلية، فلا نسمّي WebM باسم MP4.
   function pickMime() {
     if (!window.MediaRecorder) return null;
     const options = [
-      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
       "video/webm;codecs=vp9,opus",
       "video/webm;codecs=vp8,opus",
       "video/webm",
+      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
       "video/mp4",
     ];
     return options.find((m) => MediaRecorder.isTypeSupported(m)) || null;
@@ -993,7 +995,7 @@
   // اسم الملف: اسم السورة ورقم الآيات، مثل «الفاتحة 1-7.mp4»
   function exportFileName(ext) {
     const s = surahData();
-    const base = s ? s.name : "مقطع";
+    const base = (s && A.plainName(s.name)) || "مقطع";
     const range = S.from === S.to ? `${S.from}` : `${S.from}-${S.to}`;
     return `${base} ${range}.${ext}`;
   }
@@ -1170,13 +1172,34 @@
     RT.lastName = name;
     setProgress(1, null);
     showResult(blob, name);
-    setStage("الملف جاهز. اضغط «تحميل الملف» لحفظه في التنزيلات.", "ok");
     STORE.history.add("export", name);
     renderChecklist();
+    // على أندرويد: كل مقطع يُحفظ تلقائياً في التنزيلات فور انتهائه
+    if (nativeBridge) {
+      saveNative(blob, name);
+    } else {
+      setStage("الملف جاهز. اضغط «تحميل الملف» لحفظه.", "ok");
+    }
   }
 
   function formatMegabytes(bytes) {
     return `${toAr((bytes / 1048576).toFixed(1))} ميغابايت`;
+  }
+
+  // اسم فيه عربي وأرقام ونقطة (مثل: الفاتحة 1-7.mp4): الجزء اللاتيني يُعزل في bdi حتى لا ينقلب ترتيبه
+  function setMixedText(el, text) {
+    el.textContent = "";
+    for (const part of String(text).split(/([A-Za-z0-9][A-Za-z0-9.\-]*)/)) {
+      if (!part) continue;
+      if (/^[A-Za-z0-9]/.test(part)) {
+        const bdi = document.createElement("bdi");
+        bdi.dir = "ltr";
+        bdi.textContent = part;
+        el.appendChild(bdi);
+      } else {
+        el.appendChild(document.createTextNode(part));
+      }
+    }
   }
 
   function showResult(blob, name) {
@@ -1187,7 +1210,7 @@
     link.href = RT.resultUrl;
     link.download = name;
     const secs = Math.max(0, RT.exportEnd - RT.exportStart);
-    $("readyName").textContent = name;
+    setMixedText($("readyName"), name);
     $("readyMeta").textContent = `${fmt(secs)} · ${formatMegabytes(blob.size)} · ${name.endsWith(".mp4") ? "MP4" : "WebM"}`;
     const canShare = !!(navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], name, { type: blob.type })] }));
     $("shareBtn").hidden = !canShare;
@@ -1279,7 +1302,9 @@
     setStage("جاري الحفظ في التنزيلات...");
     try {
       const where = await saveToDevice(blob, name);
-      setStage(`تم الحفظ في التنزيلات: ${where.replace(/^.*\//, "")}`, "ok");
+      // المسار يجي بالشكل Download/<مجلد التطبيق>/<الملف>
+      const m = where.match(/\/(.+)\/([^/]+)$/);
+      setStage(m ? `تم الحفظ في التنزيلات، داخل «${m[1]}»: ${m[2]}` : "تم الحفظ في التنزيلات.", "ok");
     } catch (err) {
       setStage(`تعذّر الحفظ: ${err.message || "خطأ غير معروف"}. جرّب مرة ثانية.`, "error");
     } finally {

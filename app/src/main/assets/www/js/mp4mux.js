@@ -1,16 +1,20 @@
 /*
- * كاتب MP4 (fragmented MP4) وفهرس ملفات MP3. دوال نقية بدون متصفح، فتُختبر في Node.
+ * كاتب MP4 بتخطيط كلاسيكي (moov قبل mdat) وفهرس ملفات MP3. دوال نقية بدون متصفح، فتُختبر في Node.
  *
  * - الفيديو: H.264 بصيغة AVCC (كما يخرجها VideoEncoder مع avc.format = "avc").
  * - الصوت: AAC-LC خام (كما يخرجها AudioEncoder)، مع AudioSpecificConfig من الـ metadata.
- * - الملف: صندوق ftyp + moov (بدون جداول عينات) ثم أجزاء moof + mdat.
- *   الكتابة تدريجية، ولا نحتاج معرفة الحجم الكلي قبل البدء.
+ * - الملف: ftyp ثم moov كامل فيه جداول العينات (stts, stss, stsc, stsz, stco) ثم mdat.
+ *   هذا هو الشكل الذي تفهمه معارض أندرويد ومدراء الملفات ومشغّلات الفيديو من أول قراءة:
+ *   المدة وعدد العينات والأبعاد معروفة قبل بيانات الصور.
+ *
+ * الكاتب يجمع العينات أثناء الترميز، ويكتب الملف كله مرة واحدة في finish().
  */
 (function (root) {
   "use strict";
 
   const VIDEO_TIMESCALE = 90000; // يقبل القسمة على 24 و25 و30 و60 بدون كسور
   const AAC_FRAME = 1024;
+  const MAX_OFFSET = 0xffffffff; // جداول stco تستخدم أوفست 32 بت
 
   // ---------- بايتات وصناديق ----------
   const ascii = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
@@ -43,12 +47,12 @@
     d.setUint32(0, n >>> 0);
     return new Uint8Array(d.buffer);
   };
-  const i32 = (n) => {
-    const d = new DataView(new ArrayBuffer(4));
-    d.setInt32(0, n);
+  // مصفوفة أرقام 32 بت دفعة واحدة (بدون spread، فالمقاطع الطويلة لها آلاف العينات)
+  function u32list(nums) {
+    const d = new DataView(new ArrayBuffer(nums.length * 4));
+    for (let i = 0; i < nums.length; i++) d.setUint32(i * 4, nums[i] >>> 0);
     return new Uint8Array(d.buffer);
-  };
-  const u64 = (n) => cat(u32(Math.floor(n / 4294967296)), u32(n % 4294967296));
+  }
 
   function box(type, ...body) {
     const payload = cat(...body);
@@ -91,7 +95,7 @@
     u32(0), u32(0), u32(0x40000000),
   );
 
-  // ---------- وصف العينات (sample entries) والجداول الفارغة ----------
+  // ---------- وصف العينات (sample entries) ----------
   function sampleEntryAvc(width, height, avcC) {
     return box(
       "avc1",
@@ -115,34 +119,80 @@
     );
   }
 
-  const emptyStbl = (entry) =>
-    box(
+  // ---------- مسار: عيناته وقطعه ----------
+  /*
+   * كل عينة لها حجم ومدة وزمن dts ونوع (مفتاح أو لا). كل مجموعة متتالية من عينات
+   * المسار نفسه داخل mdat تُكتب كقطعة (chunk) واحدة، وإزاحتها نسبية لبداية mdat.
+   */
+  function createTrack(spec) {
+    return { ...spec, sizes: [], dts: [], dur: [], keys: [], chunks: [] };
+  }
+
+  // مدة كل عينة: الفرق بين dts المتتالية، وآخر عينة مدتها المعطاة
+  function sampleDurations(t) {
+    const n = t.sizes.length;
+    const out = new Array(n);
+    for (let i = 0; i < n; i++) {
+      out[i] = i + 1 < n ? Math.max(1, t.dts[i + 1] - t.dts[i]) : Math.max(1, t.dur[i]);
+    }
+    return out;
+  }
+
+  // stts: أزواج (عدد، مدة) متتالية
+  function sttsBox(durs) {
+    const runs = [];
+    for (const d of durs) {
+      const n = runs.length;
+      if (n && runs[n - 1] === d) runs[n - 2]++;
+      else runs.push(1, d);
+    }
+    return fbox("stts", 0, 0, u32(runs.length / 2), u32list(runs));
+  }
+
+  // stsc: كل قطعة فيها عدد العينات نفسه تتجمع في سطر واحد
+  function stscBox(chunks) {
+    const runs = []; // أزواج (أول قطعة، عدد العينات فيها)
+    chunks.forEach((c, i) => {
+      const n = runs.length;
+      if (!n || runs[n - 1] !== c.count) runs.push(i + 1, c.count);
+    });
+    const rows = [];
+    for (let k = 0; k < runs.length; k += 2) rows.push(runs[k], runs[k + 1], 1);
+    return fbox("stsc", 0, 0, u32(runs.length / 2), u32list(rows));
+  }
+
+  // ---------- صندوق المسار ----------
+  function trakFor(t, base) {
+    const durs = sampleDurations(t);
+    let mediaDur = 0;
+    for (const d of durs) mediaDur += d;
+    const movieDur = Math.round((mediaDur * 1000) / t.timescale);
+
+    const keyNums = [];
+    if (t.isVideo) t.keys.forEach((k, i) => { if (k) keyNums.push(i + 1); });
+    const offsets = t.chunks.map((c) => base + c.rel);
+
+    const stbl = box(
       "stbl",
-      fbox("stsd", 0, 0, u32(1), entry),
-      fbox("stts", 0, 0, u32(0)),
-      fbox("stsc", 0, 0, u32(0)),
-      fbox("stsz", 0, 0, u32(0), u32(0)),
-      fbox("stco", 0, 0, u32(0)),
+      fbox("stsd", 0, 0, u32(1), t.entry),
+      sttsBox(durs),
+      ...(t.isVideo ? [fbox("stss", 0, 0, u32(keyNums.length), u32list(keyNums))] : []),
+      stscBox(t.chunks),
+      fbox("stsz", 0, 0, u32(0), u32(t.sizes.length), u32list(t.sizes)),
+      fbox("stco", 0, 0, u32(offsets.length), u32list(offsets)),
     );
 
-  function trak(o) {
-    const w = o.isVideo ? o.width : 0;
-    const h = o.isVideo ? o.height : 0;
     const tkhd = fbox(
       "tkhd", 0, 3,
-      u32(0), u32(0), u32(o.trackId), u32(0), u32(0),
-      zeros(8), u16(0), u16(0), u16(o.isVideo ? 0 : 0x0100), u16(0),
-      MATRIX, u32(w * 65536), u32(h * 65536),
+      u32(0), u32(0), u32(t.id), u32(0), u32(movieDur),
+      zeros(8), u16(0), u16(0), u16(t.isVideo ? 0 : 0x0100), u16(0),
+      MATRIX, u32(t.isVideo ? t.width * 65536 : 0), u32(t.isVideo ? t.height * 65536 : 0),
     );
-    const mdhd = fbox("mdhd", 0, 0, u32(0), u32(0), u32(o.timescale), u32(0), u16(0x55c4), u16(0));
-    const hdlr = fbox(
-      "hdlr", 0, 0,
-      u32(0), ascii(o.handler), zeros(12),
-      ascii(o.isVideo ? "VideoHandler" : "SoundHandler"), u8(0),
-    );
+    const mdhd = fbox("mdhd", 0, 0, u32(0), u32(0), u32(t.timescale), u32(mediaDur), u16(0x55c4), u16(0));
+    const hdlr = fbox("hdlr", 0, 0, u32(0), ascii(t.handler), zeros(12), ascii(t.name), u8(0));
     const dinf = box("dinf", fbox("dref", 0, 0, u32(1), fbox("url ", 0, 1)));
-    const minf = box("minf", o.mediaHeader, dinf, emptyStbl(o.entry));
-    return box("trak", tkhd, box("mdia", mdhd, hdlr, minf));
+    const minf = box("minf", t.mediaHeader, dinf, stbl);
+    return { movieDur, box: box("trak", tkhd, box("mdia", mdhd, hdlr, minf)) };
   }
 
   const mvhd = (durationMs, nextTrack) =>
@@ -153,121 +203,87 @@
       MATRIX, zeros(24), u32(nextTrack),
     );
 
-  const trex = (trackId) => fbox("trex", 0, 0, u32(trackId), u32(1), u32(0), u32(0), u32(0));
-
-  function initSegment(cfg) {
-    const ftyp = box("ftyp", ascii("isom"), u32(512), ascii("isom"), ascii("iso2"), ascii("avc1"), ascii("mp41"));
-    const tracks = [
-      trak({
-        trackId: 1, isVideo: true, width: cfg.width, height: cfg.height,
-        timescale: VIDEO_TIMESCALE, handler: "vide",
-        mediaHeader: fbox("vmhd", 0, 1, u16(0), u16(0), u16(0), u16(0)),
-        entry: sampleEntryAvc(cfg.width, cfg.height, cfg.avcC),
-      }),
-    ];
-    const ids = [1];
-    if (cfg.audio) {
-      tracks.push(trak({
-        trackId: 2, isVideo: false, timescale: cfg.audio.sampleRate, handler: "soun",
-        mediaHeader: fbox("smhd", 0, 0, u16(0), u16(0)),
-        entry: sampleEntryAac(cfg.audio.channels, cfg.audio.sampleRate, cfg.audio.asc),
-      }));
-      ids.push(2);
-    }
-    const moov = box("moov", mvhd(cfg.durationMs, ids.length + 1), ...tracks, box("mvex", ...ids.map(trex)));
-    return cat(ftyp, moov);
+  // moov كامل. base = الأوفست المطلق لبداية بيانات mdat (تدخل في stco)
+  function buildMoov(tracks, base) {
+    const built = tracks.map((t) => trakFor(t, base));
+    const movieDur = Math.max(...built.map((b) => b.movieDur));
+    return box("moov", mvhd(movieDur, tracks.length + 1), ...built.map((b) => b.box));
   }
 
-  // ---------- كاتب الأجزاء ----------
+  // ---------- الكاتب ----------
   /*
-   * cfg: {width, height, avcC (Uint8Array), durationMs, audio: {sampleRate, channels, asc} | null}
+   * cfg: {width, height, avcC (Uint8Array), audio: {sampleRate, channels, asc} | null}
+   *      (المدة تُحسب من العينات الفعلية)
    * addVideo(data, dts, dur, key)  — dts و dur بوحدة 90000 في الثانية
    * addAudio(data, dts, dur)       — dts و dur بوحدة معدل العينة
-   * flush(untilSec)                — يكتب العينات التي زمنها < untilSec في جزء واحد
-   * finish()                       — يكتب كل ما تبقى ويرجّع Blob
+   * flush(untilSec)                — محفوظة للتوافق، لا تفعل شيئاً: كل شيء يُكتب في finish()
+   * finish()                       — يرجّع Blob بالملف كاملاً
    */
   function createMp4Writer(cfg) {
-    const parts = [];
-    const vq = [];
-    const aq = [];
-    let seq = 1;
-    let bytesOut = 0;
-    const hasAudio = !!cfg.audio;
+    const video = createTrack({
+      id: 1, timescale: VIDEO_TIMESCALE, isVideo: true, width: cfg.width, height: cfg.height,
+      handler: "vide", name: "VideoHandler",
+      mediaHeader: fbox("vmhd", 0, 1, u16(0), u16(0), u16(0), u16(0)),
+      entry: sampleEntryAvc(cfg.width, cfg.height, cfg.avcC),
+    });
+    const audio = cfg.audio
+      ? createTrack({
+        id: 2, timescale: cfg.audio.sampleRate, isVideo: false,
+        handler: "soun", name: "SoundHandler",
+        mediaHeader: fbox("smhd", 0, 0, u16(0), u16(0)),
+        entry: sampleEntryAac(cfg.audio.channels, cfg.audio.sampleRate, cfg.audio.asc),
+      })
+      : null;
 
-    const init = initSegment(cfg);
-    parts.push(init);
-    bytesOut += init.length;
+    const ftyp = box("ftyp", ascii("isom"), u32(512), ascii("isom"), ascii("iso2"), ascii("avc1"), ascii("mp41"));
+    const payloads = []; // بيانات العينات بترتيب وصولها داخل mdat
+    let dataBytes = 0;
+    let open = null; // المسار الذي تُكتب قطعته الحالية
+
+    function put(track, bytes, dts, dur, key) {
+      if (open !== track) {
+        track.chunks.push({ rel: dataBytes, count: 0 });
+        open = track;
+      }
+      track.chunks[track.chunks.length - 1].count++;
+      track.sizes.push(bytes.length);
+      track.dts.push(dts);
+      track.dur.push(dur);
+      track.keys.push(!!key);
+      // Blob يحمل البيانات خارج كومة JS، فلا تتراكم مصفوفات كبيرة على الذاكرة
+      payloads.push(new Blob([bytes]));
+      dataBytes += bytes.length;
+    }
 
     function addVideo(data, dts, dur, key) {
-      vq.push({ data, dts, dur, flags: key ? 0x02000000 : 0x01010000 });
+      put(video, data, dts, dur, key);
     }
 
     function addAudio(data, dts, dur) {
-      aq.push({ data, dts, dur, flags: 0x02000000 });
+      if (audio) put(audio, data, dts, dur, true);
     }
 
-    function takeBefore(q, limit) {
-      let n = 0;
-      while (n < q.length && q[n].dts < limit) n++;
-      return q.splice(0, n);
-    }
-
-    const sizeOf = (samples) => samples.reduce((n, s) => n + s.data.length, 0);
-
-    function emit(runs) {
-      const dataLen = runs.reduce((n, r) => n + sizeOf(r.samples), 0);
-      const buildMoof = (offsets) =>
-        box(
-          "moof",
-          fbox("mfhd", 0, 0, u32(seq)),
-          ...runs.map((r, i) => {
-            const entries = r.samples.map((s) => cat(u32(s.dur), u32(s.data.length), u32(s.flags)));
-            return box(
-              "traf",
-              fbox("tfhd", 0, 0x020000, u32(r.trackId)),
-              fbox("tfdt", 1, 0, u64(r.base)),
-              fbox("trun", 0, 0x000701, u32(r.samples.length), i32(offsets[i]), ...entries),
-            );
-          }),
-        );
-
-      // حجم الـ moof ثابت (كل الحقول بحجم ثابت)، فنحسبه أولاً ثم نضع إزاحات البيانات
-      const probe = buildMoof(runs.map(() => 0));
-      let off = probe.length + 8; // +8 لرأس mdat
-      const offsets = runs.map((r) => {
-        const at = off;
-        off += sizeOf(r.samples);
-        return at;
-      });
-      const moof = buildMoof(offsets);
-      const mdatHead = cat(u32(8 + dataLen), ascii("mdat"));
-      parts.push(moof, mdatHead);
-      bytesOut += moof.length + mdatHead.length;
-      for (const r of runs) {
-        for (const s of r.samples) {
-          parts.push(s.data);
-          bytesOut += s.data.length;
-        }
-      }
-      seq++;
-    }
-
-    function flush(untilSec) {
-      const v = takeBefore(vq, untilSec * VIDEO_TIMESCALE);
-      const a = hasAudio ? takeBefore(aq, untilSec * cfg.audio.sampleRate) : [];
-      if (!v.length && !a.length) return;
-      const runs = [];
-      if (v.length) runs.push({ trackId: 1, base: v[0].dts, samples: v });
-      if (a.length) runs.push({ trackId: 2, base: a[0].dts, samples: a });
-      emit(runs);
+    function flush() {
+      /* للتوافق فقط */
     }
 
     function finish() {
-      flush(Infinity);
-      return new Blob(parts, { type: "video/mp4" });
+      if (!video.sizes.length) throw new Error("لا توجد إطارات فيديو للكتابة.");
+      const tracks = [video];
+      if (audio && audio.sizes.length) tracks.push(audio);
+
+      // نبني moov مرتين: الأولى لمعرفة طوله، والثانية بالأوفست الحقيقي.
+      // طول moov ثابت لأن كل الأوفستات بحجم 32 بت.
+      const probe = buildMoov(tracks, 0);
+      const mdatStart = ftyp.length + probe.length;
+      const payloadStart = mdatStart + 8;
+      if (payloadStart + dataBytes > MAX_OFFSET) throw new Error("الملف أكبر من الحد المسموح.");
+      const moov = buildMoov(tracks, payloadStart);
+      const mdatHead = cat(u32(8 + dataBytes), ascii("mdat"));
+      return new Blob([ftyp, moov, mdatHead].concat(payloads), { type: "video/mp4" });
     }
 
-    return { addVideo, addAudio, flush, finish, bytes: () => bytesOut };
+    return { addVideo, addAudio, flush, finish, bytes: () => ftyp.length + dataBytes };
   }
 
   // ---------- فهرس MP3 (تقطيع على حدود الإطارات) ----------
