@@ -1,1045 +1,920 @@
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>صانع المقاطع القرآنية | إنابة</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Noto+Naskh+Arabic:wght@400;700&family=Noto+Sans:wght@400;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0d1b22;
     --panel: #152a33;
+    --panel-2: #1b3541;
     --line: #24404b;
     --gold: #e8c968;
+    --gold-ink: #1b1400;
     --text: #eaf2f0;
     --muted: #9db3b0;
+    --ok: #7fd1a6;
+    --warn: #f0c27a;
+    --bad: #e88e8e;
+    --field: #0d1b22;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f2e8;
+    --panel: #fffdf7;
+    --panel-2: #f1ead8;
+    --line: #dcd3bd;
+    --gold: #9a7a1f;
+    --gold-ink: #ffffff;
+    --text: #1d2a2e;
+    --muted: #5d6f6b;
+    --ok: #2b7a52;
+    --warn: #9a6a12;
+    --bad: #a83a3a;
+    --field: #ffffff;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { color-scheme: dark; }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0;
     font-family: "Segoe UI", Tahoma, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
   }
-  header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--line);
-  }
-  header h1 { margin: 0; font-size: 20px; color: var(--gold); }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-  main {
-    display: grid;
-    grid-template-columns: minmax(300px, 430px) 1fr;
-    gap: 16px;
-    padding: 16px;
-    align-items: start;
-  }
-  @media (max-width: 880px) { main { grid-template-columns: 1fr; } }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px;
-  }
-  fieldset {
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    margin: 0 0 12px;
-    padding: 10px 12px 12px;
-  }
-  legend { color: var(--gold); padding: 0 6px; font-weight: 700; }
-  label { display: block; margin: 6px 0; font-size: 13px; color: var(--muted); }
-  input[type=number], input[type=text], textarea, select {
-    width: 100%;
-    background: var(--bg);
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 7px 9px;
-    font: inherit;
-  }
-  input[type=file] { color: var(--muted); font-size: 13px; width: 100%; }
-  input[type=range] { width: 100%; }
-  input[type=checkbox] { accent-color: var(--gold); }
-  textarea {
-    font-family: Amiri, "Noto Naskh Arabic", serif;
-    font-size: 18px;
-    line-height: 1.9;
-    min-height: 120px;
-    resize: vertical;
-  }
-  button {
-    background: #1d3a46;
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font: inherit;
-  }
-  button:hover { border-color: var(--gold); }
-  button.primary { background: var(--gold); color: #1b1400; border-color: var(--gold); font-weight: 700; }
-  button:disabled { opacity: .5; cursor: not-allowed; }
-  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; margin: 6px 0; }
-  .row > label { flex: 1; min-width: 120px; margin: 0; }
+  h1, h2, h3 { margin: 0; }
+  h2 { font-size: 18px; color: var(--gold); margin-bottom: 10px; }
+  p { margin: 6px 0; }
+  .hint { font-size: 12.5px; color: var(--muted); line-height: 1.8; margin: 6px 0; }
   .status { font-size: 13px; color: var(--muted); min-height: 18px; margin: 6px 0; }
-  .table-wrap {
-    max-height: 300px;
-    overflow: auto;
-    border: 1px solid var(--line);
-    border-radius: 8px;
+  .status[data-kind="error"] { color: var(--bad); }
+  .status[data-kind="warn"] { color: var(--warn); }
+  .status[data-kind="ok"] { color: var(--ok); }
+  .muted { opacity: .55; }
+  .empty { color: var(--muted); padding: 8px 0; text-align: center; }
+
+  /* الشريط العلوي */
+  .topbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+    padding: 12px 18px; border-bottom: 1px solid var(--line); background: var(--panel);
+    position: sticky; top: 0; z-index: 10;
   }
+  .brand { flex: 1 1 220px; }
+  .brand h1 { font-size: 19px; color: var(--gold); }
+  .brand p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+
+  /* عناصر عامة */
+  button, .btn {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 11px; cursor: pointer; font: inherit; font-size: 14px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 4px; justify-content: center;
+  }
+  button:hover:not(:disabled) { border-color: var(--gold); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button.primary, a.primary { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); font-weight: 700; }
+  button.big { padding: 11px 16px; font-size: 16px; }
+  button.ghost { background: transparent; }
+  button.on { color: var(--gold); border-color: var(--gold); }
+  input[type=number], input[type=text], input[type=search], select, textarea {
+    width: 100%; background: var(--field); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 7px 9px; font: inherit; font-size: 14px;
+  }
+  textarea { min-height: 90px; resize: vertical; font-family: Amiri, serif; font-size: 17px; line-height: 1.9; }
+  input[type=color] { width: 44px; height: 32px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; }
+  input[type=range] { width: 100%; accent-color: var(--gold); }
+  input[type=checkbox] { accent-color: var(--gold); width: 16px; height: 16px; }
+  input[type=file] { font-size: 13px; color: var(--muted); width: 100%; }
+  label { display: block; margin: 8px 0; font-size: 13px; color: var(--muted); }
+  label.inline { display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+  .chips button { padding: 5px 9px; font-size: 13px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 0 0 12px; padding: 10px 12px 12px; }
+  legend { color: var(--gold); padding: 0 6px; font-weight: 700; font-size: 14px; }
+  .toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--gold);
+    padding: 10px 16px; border-radius: 10px; z-index: 50; max-width: min(92vw, 520px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35); font-size: 14px;
+  }
+  .toast[data-kind="error"] { border-color: var(--bad); }
+  .warn { font-size: 13px; color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border-radius: 8px; padding: 6px 10px; margin: 6px 0; }
+
+  /* الخطوات */
+  .stepper { list-style: none; padding: 0; margin: 14px 16px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stepbtn { width: 100%; justify-content: flex-start; padding: 10px 12px; font-size: 14px; }
+  .stepbtn span {
+    display: inline-flex; width: 24px; height: 24px; border-radius: 50%; align-items: center; justify-content: center;
+    background: var(--line); font-weight: 700; font-size: 13px; flex: none;
+  }
+  .stepbtn.active { border-color: var(--gold); }
+  .stepbtn.active span { background: var(--gold); color: var(--gold-ink); }
+
+  .workspace {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+    gap: 16px; padding: 16px; align-items: start;
+  }
+  .stage { position: sticky; top: 84px; }
+  .stage-canvas { display: flex; justify-content: center; }
+  .stage canvas {
+    display: block; width: 100%; height: auto; max-height: min(64vh, 720px);
+    object-fit: contain; background: #000; border-radius: 10px;
+  }
+  .transport { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin: 10px 0 4px; }
+  .timeline-meta { display: flex; align-items: center; gap: 10px; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .timeline-meta .vol { display: flex; align-items: center; gap: 6px; margin: 0; flex: 0 1 140px; }
+  .offset { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+  .offset .label-row { display: flex; justify-content: space-between; align-items: center; }
+  .offset strong { color: var(--gold); }
+  .offset input[type=range] { margin: 6px 0; }
+  .steps { min-width: 0; }
+  .step { padding: 14px; }
+  .stepnav { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+
+  /* الجداول والنتائج */
+  .results { list-style: none; padding: 0; margin: 8px 0; max-height: 360px; overflow: auto; }
+  .result { border-bottom: 1px solid var(--line); padding: 8px 2px; }
+  .result .ref { font-size: 12.5px; color: var(--gold); font-weight: 700; }
+  .result .txt { font-family: Amiri, "Noto Naskh Arabic", serif; font-size: 18px; line-height: 1.8; margin: 2px 0; }
+  .table-wrap { max-height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; margin-top: 6px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { padding: 6px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: middle; }
-  th { color: var(--gold); font-weight: 700; position: sticky; top: 0; background: var(--panel); }
-  td.txt {
-    font-family: Amiri, "Noto Naskh Arabic", serif;
-    font-size: 17px;
-    max-width: 180px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  th { color: var(--gold); position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  td.txt { font-family: Amiri, "Noto Naskh Arabic", serif; font-size: 17px; line-height: 1.6; }
+  td input.startIn { width: 96px; }
+  tr.active { background: color-mix(in srgb, var(--gold) 16%, transparent); }
+  .summary { font-size: 13px; color: var(--muted); margin: 6px 0; }
+  .presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+  .presets button { font-size: 13px; padding: 9px 4px; }
+  .opts.muted { opacity: .55; }
+  .range-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+
+  /* قائمة الخلفيات */
+  .bg-list { list-style: none; padding: 0; margin: 8px 0; max-height: 240px; overflow: auto; }
+  .bg-list li { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .bg-list .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bg-list button { padding: 3px 8px; font-size: 13px; }
+  .thumb { width: 36px; height: 26px; border-radius: 5px; object-fit: cover; flex: none; border: 1px solid var(--line); }
+  .thumb.video { display: inline-flex; align-items: center; justify-content: center; background: var(--panel-2); font-size: 11px; color: var(--gold); }
+  .missing { color: var(--warn); font-style: normal; font-size: 12px; }
+
+  /* قائمة التحقق والتصدير */
+  .checklist { list-style: none; padding: 0; margin: 8px 0; font-size: 14px; }
+  .checklist li { padding: 5px 0; display: flex; gap: 8px; align-items: flex-start; }
+  .checklist li span { display: inline-flex; width: 20px; height: 20px; border-radius: 50%; justify-content: center; align-items: center; font-size: 12px; flex: none; }
+  .checklist li.ok span { background: var(--ok); color: #06210f; }
+  .checklist li.bad span { background: var(--warn); color: #3a2600; }
+  .progress { height: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin: 10px 0 4px; }
+  #progressBar { height: 100%; width: 0; background: var(--gold); transition: width .2s linear; }
+  #resultBox { margin-top: 12px; }
+  #resultVideo { width: 100%; max-height: 60vh; background: #000; border-radius: 10px; display: block; }
+
+  /* المسودات والمعلومات */
+  .drafts { list-style: none; padding: 0; margin: 10px 0; }
+  .drafts li { border-bottom: 1px solid var(--line); padding: 10px 0; display: flex; flex-direction: column; gap: 6px; }
+  .draft-name { font-size: 15px; }
+  .draft-main { display: flex; flex-direction: column; gap: 2px; }
+  .about p { font-size: 14.5px; line-height: 1.9; }
+  .about ul { padding-inline-start: 18px; font-size: 14px; line-height: 1.9; }
+
+  .view { display: block; }
+
+  /* الصفحات الجديدة */
+  .newbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 16px 0; }
+  .page { margin: 16px; display: grid; gap: 10px; max-width: 1000px; }
+  .page h2 { margin-top: 4px; }
+  .page h3 { font-size: 15px; color: var(--gold); margin: 12px 0 2px; }
+  .page fieldset { margin: 0; }
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; }
+  .list { list-style: none; padding: 0; margin: 6px 0; }
+  .list li { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .list li .name { flex: 1 1 200px; font-size: 14px; }
+  .history { list-style: none; padding: 0; margin: 6px 0; font-size: 13px; }
+  .history li { border-bottom: 1px solid var(--line); padding: 6px 0; display: flex; justify-content: space-between; gap: 8px; color: var(--muted); flex-wrap: wrap; }
+  .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .lib-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .lib-card .media { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; background: #000; }
+  .lib-card .meta { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .lib-preview { background: var(--panel); border: 1px solid var(--gold); border-radius: 12px; padding: 10px; display: grid; gap: 8px; }
+  .lib-preview img, .lib-preview video { width: 100%; max-height: 50vh; object-fit: contain; border-radius: 8px; background: #000; }
+  .empty-box { border: 1px dashed var(--line); border-radius: 10px; padding: 14px; color: var(--muted); font-size: 14px; grid-column: 1 / -1; }
+  .about-list { padding-inline-start: 18px; font-size: 14px; line-height: 1.9; }
+
+  /* التنقل: شريط سفلي ثابت في كل المقاسات (لا يوجد شريط علوي) */
+  .ico { width: 17px; height: 17px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tabbar {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+    position: fixed; bottom: 0; inset-inline: 0; margin-inline: auto; width: min(100%, 560px); z-index: 20;
+    background: var(--panel); border-top: 1px solid var(--line);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
   }
-  td input { width: 90px; }
-  tr.active { background: rgba(232, 201, 104, .14); }
-  #bgList { list-style: none; padding: 0; margin: 8px 0; max-height: 160px; overflow: auto; }
-  #bgList li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 0;
-    border-bottom: 1px solid var(--line);
-    font-size: 13px;
+  body { padding-bottom: 84px; }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: transparent; border: 0; color: var(--muted); font-size: 11.5px; padding: 6px 2px; border-radius: 10px;
   }
-  #bgList li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .preview { position: sticky; top: 16px; }
-  .preview canvas {
-    display: block;
-    width: 100%;
-    max-width: 460px;
-    height: auto;
-    margin: 0 auto;
-    background: #000;
-    border-radius: 10px;
+  .tab .ico { width: 22px; height: 22px; }
+  .tab.active, .tab[aria-expanded="true"] { color: var(--gold); }
+  .sheet { position: fixed; inset: 0; z-index: 30; display: flex; align-items: flex-end; background: rgba(0, 0, 0, .45); }
+  .sheet[hidden] { display: none; }
+  .sheet-card { width: 100%; max-width: 560px; margin: 0 auto; background: var(--panel); border-radius: 18px 18px 0 0; padding: 14px 14px calc(18px + env(safe-area-inset-bottom)); display: grid; gap: 8px; }
+  .sheet-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); font-size: 15px; text-align: start; }
+  .sheet-item .ico { width: 20px; height: 20px; }
+  .sheet-item.active { border-color: var(--gold); }
+  .sheet-close { justify-content: center; color: var(--muted); }
+
+  /* التصدير: شريط التقدّم وبطاقة الملف الجاهز */
+  .progress-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+  .pct { font-size: 14px; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .ready { margin-top: 12px; border: 1px solid var(--ok); border-radius: 14px; padding: 12px; background: var(--panel); display: grid; gap: 10px; }
+  .ready-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .ready-ico { width: 34px; height: 34px; border-radius: 50%; background: var(--ok); color: #06210f; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex: none; }
+  .ready-text { display: flex; flex-direction: column; min-width: 0; }
+  .ready-text strong { overflow-wrap: anywhere; font-size: 15px; }
+  .ready-text small { color: var(--muted); font-size: 12.5px; }
+  .ready .chips { margin: 0; }
+
+  /* الجوال والأجهزة الصغيرة */
+  @media (max-width: 720px) {
+    .topbar { padding: 10px 14px; }
   }
-  .timeinfo { text-align: center; color: var(--muted); font-size: 13px; margin: 8px 0; }
-  .hint { font-size: 12px; color: var(--muted); line-height: 1.7; }
-  #downloadLink { color: var(--gold); font-weight: 700; }
+  @media (max-width: 900px) {
+    .workspace { grid-template-columns: 1fr; padding: 10px; gap: 12px; }
+    .stage { position: static; order: -1; }
+    .stage canvas { max-height: 46vh; }
+    .stepper { margin: 10px; grid-template-columns: 1fr; }
+    .stepbtn { font-size: 13.5px; padding: 8px 10px; }
+    .presets { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    body { font-size: 14.5px; }
+    .row2 { grid-template-columns: 1fr; }
+    .topbar { padding: 10px 12px; }
+    .brand h1 { font-size: 17px; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>صانع المقاطع القرآنية</h1>
-  <p>آيات بصوت القارئ، فوق خلفيات صور وفيديوهات من اختيارك. كل شي بيصير داخل المتصفح.</p>
+
+<header class="topbar">
+  <div class="brand">
+    <h1>صانع المقاطع القرآنية</h1>
+    <p>آيات بصوت القارئ فوق خلفياتك. كل شي يصير داخل متصفحك.</p>
+  </div>
+  <button id="themeBtn" class="ghost" type="button">☀ فاتح</button>
 </header>
 
-<main>
-  <section class="panel controls">
+<nav class="tabbar" aria-label="التنقل السفلي">
+  <button class="tab" data-view="home" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>الرئيسية</span></button>
+  <button class="tab active" data-view="create" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg><span>إنشاء</span></button>
+  <button class="tab" data-view="drafts" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>مشاريعي</span></button>
+  <button class="tab" data-view="library" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg><span>المكتبة</span></button>
+  <button class="tab" id="moreBtn" type="button" aria-haspopup="true" aria-controls="moreSheet"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span>المزيد</span></button>
+</nav>
 
-    <fieldset>
-      <legend>1. الآيات</legend>
-      <div class="row">
-        <label>رقم السورة
-          <input type="number" id="surahNo" min="1" max="114" value="1">
-        </label>
-        <button id="fetchBtn">جلب الآيات</button>
-      </div>
-      <div class="status" id="fetchStatus"></div>
-      <label>نص الآيات (سطر لكل آية)
-        <textarea id="versesInput" placeholder="اجلب الآيات من الإنترنت، أو الصق النص هنا سطراً لكل آية"></textarea>
-      </label>
-      <div class="row">
-        <label>من آية <input type="number" id="fromNo" min="1" value="1"></label>
-        <label>إلى آية <input type="number" id="toNo" min="1" value="1"></label>
-        <button id="applyRangeBtn">تطبيق النطاق</button>
-      </div>
-    </fieldset>
+<div id="moreSheet" class="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-label="المزيد">
+    <button class="sheet-item" data-view="reciters" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>القرّاء</span></button>
+    <button class="sheet-item" data-view="favorites" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg><span>المفضلة</span></button>
+    <button class="sheet-item" data-view="settings" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="14" cy="18" r="2"/><path d="M3 6h11M18 6h3M3 12h3M13 12h8M3 18h9M16 18h5"/></svg><span>الإعدادات</span></button>
+    <button class="sheet-item" data-view="about" type="button"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h0"/></svg><span>عن التطبيق</span></button>
+    <button class="sheet-item sheet-close" id="sheetClose" type="button">إغلاق</button>
+  </div>
+</div>
 
-    <fieldset>
-      <legend>2. الصوت والتوقيت</legend>
-      <fieldset>
-        <legend>مصدر MP3Quran (توقيت تلقائي للآيات)</legend>
-        <label>القارئ
-          <select id="mp3Reciter"><option value="">جاري التحميل...</option></select>
-        </label>
-        <div class="row"><button id="fetchMp3Btn" class="primary">جلب الصوت والتوقيت للسورة</button></div>
-        <div class="status" id="mp3Status"></div>
-        <p class="hint">يجيب توقيت كل آية من واجهة MP3Quran، فما تحتاج تسجّل التوقيت يدوياً. السورة لازم تكون متوفرة عند القارئ، وقائمة القراء تعتمد على واجهة MP3Quran.</p>
-      </fieldset>
-      <label>أو ارفع ملف صوت القارئ
-        <input type="file" id="audioFile" accept="audio/*">
-      </label>
-      <div class="row">
-        <button id="playBtn">تشغيل / إيقاف</button>
-        <button id="markBtn" class="primary">سجّل بداية الآية التالية</button>
-        <button id="undoBtn">تراجع</button>
-        <button id="autoBtn">توزيع تلقائي</button>
-      </div>
-      <div class="status" id="markInfo"></div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>#</th><th>الآية</th><th>البداية (ث)</th><th></th></tr>
-          </thead>
-          <tbody id="timelineBody"></tbody>
-        </table>
-      </div>
-      <p class="hint">شغّل الصوت، واضغط زر التسجيل عند بداية كل آية. تقدر تعدّل الأوقات يدوياً، والزر ▶ يشغّل الصوت من بداية الآية.</p>
-    </fieldset>
+<div id="toast" class="toast" hidden></div>
 
-    <fieldset>
-      <legend>3. الخلفيات</legend>
-      <label>صور وفيديوهات (اختر أكثر من ملف)
-        <input type="file" id="mediaFiles" accept="image/*,video/*" multiple>
-      </label>
-      <ul id="bgList"></ul>
-      <div class="row">
-        <label>تبديل الخلفية كل (ثانية)
-          <input type="number" id="bgInterval" min="1" max="60" value="8">
-        </label>
-        <button id="shuffleBtn">خلط الترتيب</button>
+<!-- ============ إنشاء مقطع ============ -->
+<section data-view-panel="create">
+  <div class="newbar">
+    <button id="newProjectBtn" type="button">＋ مشروع جديد</button>
+    <span class="hint">يفرغ المحرر ويطبّق الإعدادات الافتراضية من صفحة الإعدادات. المسودات المحفوظة لا تتأثر.</span>
+  </div>
+  <ol class="stepper">
+    <li><button class="stepbtn active" data-step="1" type="button"><span>1</span> اختيار الآيات والتلاوة</button></li>
+    <li><button class="stepbtn" data-step="2" type="button"><span>2</span> تخصيص التصميم</button></li>
+    <li><button class="stepbtn" data-step="3" type="button"><span>3</span> المعاينة والتصدير</button></li>
+  </ol>
+
+  <div class="workspace">
+    <aside class="stage panel">
+      <div class="stage-canvas"><canvas id="canvas" width="1080" height="1920"></canvas></div>
+      <div class="transport">
+        <button id="restartBtn" type="button" title="البداية">⏮ البداية</button>
+        <button id="back5Btn" type="button">−5 ث</button>
+        <button id="playBtn" class="primary" type="button">▶ تشغيل</button>
+        <button id="fwd5Btn" type="button">+5 ث</button>
       </div>
-      <label><input type="checkbox" id="kenBurns" checked> تكبير بطيء على الخلفية</label>
-    </fieldset>
-
-    <fieldset>
-      <legend>4. الشكل والنصوص</legend>
-      <div class="row">
-        <label>المقاس
-          <select id="sizeSel">
-            <option value="vertical">عمودي 1080×1920</option>
-            <option value="square">مربع 1080×1080</option>
-            <option value="landscape">أفقي 1920×1080</option>
-          </select>
-        </label>
-        <label>لون النص
-          <select id="textColor">
-            <option value="#ffffff">أبيض</option>
-            <option value="#e8c968">ذهبي</option>
-            <option value="#cfeee6">نعناعي فاتح</option>
-          </select>
-        </label>
+      <input type="range" id="seek" min="0" max="0" step="0.05" value="0" aria-label="موقع التشغيل">
+      <div class="timeline-meta">
+        <span id="timeInfo">00:00 / 00:00</span>
+        <label class="vol">🔈 <input type="range" data-bind="volume" data-kind="int" min="0" max="100" aria-label="الصوت"></label>
       </div>
-      <label>حجم النص <input type="range" id="textScale" min="60" max="140" value="100"></label>
-      <label>تعتيم الخلفية <input type="range" id="overlay" min="0" max="80" value="45"></label>
-      <label>عنوان المقطع <input type="text" id="titleInput"></label>
-      <label>اسم القارئ <input type="text" id="reciterName"></label>
-      <label>اسم العلامة <input type="text" id="brandName" value="إنابة"></label>
-    </fieldset>
+      <div class="warn" id="audioWarning" hidden></div>
 
-  </section>
+      <div class="offset">
+        <div class="label-row"><strong>المزامنة مع الصوت</strong><span id="offsetLabel">0 ms</span></div>
+        <div class="chips">
+          <button type="button" data-offset="-2000">−2000</button>
+          <button type="button" data-offset="-1000">−1000</button>
+          <button type="button" data-offset="0">0</button>
+          <button type="button" data-offset="1000">+1000</button>
+          <button type="button" data-offset="2000">+2000</button>
+        </div>
+        <input type="range" data-bind="offsetMs" data-kind="int" min="-2000" max="2000" step="50" aria-label="إزاحة المزامنة">
+        <p class="hint">استمع للمعاينة. إذا ظهرت الآية قبل الصوت أو بعده، حرّك الإزاحة حتى تتطابق. الإزاحة تُطبَّق على كل الآيات.</p>
+      </div>
+    </aside>
 
-  <section class="panel preview">
-    <canvas id="canvas" width="1080" height="1920"></canvas>
-    <div class="timeinfo" id="timeInfo">00:00 / 00:00</div>
-    <div class="row" style="justify-content:center">
-      <button id="exportBtn" class="primary">تصدير الفيديو</button>
-      <button id="stopExportBtn" disabled>إيقاف التسجيل</button>
+    <div class="steps">
+      <!-- الخطوة 1 -->
+      <section class="step panel" data-step-panel="1">
+        <h2>1. اختيار الآيات والتلاوة</h2>
+
+        <p class="status" id="quranStatus"></p>
+        <button id="retryQuranBtn" type="button" hidden>إعادة تحميل نص القرآن</button>
+        <div id="pasteBox" hidden>
+          <label>الصق نص الآيات (سطر لكل آية)
+            <textarea id="pasteInput" placeholder="الصق الآيات هنا. تأكد من مطابقتها للمصحف."></textarea>
+          </label>
+          <div class="row"><button id="applyPasteBtn" type="button">استخدام هذا النص</button></div>
+        </div>
+
+        <fieldset>
+          <legend>البحث في القرآن</legend>
+          <input type="search" id="searchQ" placeholder="اكتب كلمة أو آية (بدون تشكيل)" autocomplete="off">
+          <p class="status" id="searchInfo"></p>
+          <ul class="results" id="searchResults"></ul>
+        </fieldset>
+
+        <fieldset>
+          <legend>السورة والنطاق</legend>
+          <label>السورة
+            <select id="surahSel" data-bind="surah" data-kind="int"></select>
+          </label>
+          <div class="row2">
+            <label>من آية <input type="number" id="fromNo" data-bind="from" data-kind="int" min="1"></label>
+            <label>إلى آية <input type="number" id="toNo" data-bind="to" data-kind="int" min="1"></label>
+          </div>
+          <div class="chips">
+            <button id="addPrevBtn" type="button">+ الآية السابقة</button>
+            <button id="addNextBtn" type="button">+ الآية التالية</button>
+            <button id="removeLastBtn" type="button">− حذف آخر آية</button>
+            <button id="fullSurahBtn" type="button">كامل السورة</button>
+          </div>
+          <div class="summary" id="selectionInfo"></div>
+          <div class="warn" id="selectionWarn" hidden></div>
+          <p class="hint">الحد: 286 آية و05:00 دقيقة. الترتيب يتبع المصحف، لذلك لا يوجد إعادة ترتيب يدوي.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>الآيات المختارة والتوقيت</legend>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>نص الآية</th><th>البداية (ث)</th><th></th></tr></thead>
+              <tbody id="verseBody"></tbody>
+            </table>
+          </div>
+          <div class="chips">
+            <button id="markBtn" class="primary" type="button">سجّل بداية الآية التالية</button>
+            <button id="undoBtn" type="button">تراجع</button>
+            <button id="clearTimingBtn" type="button">مسح توقيت النطاق</button>
+          </div>
+          <p class="status" id="markInfo"></p>
+          <p class="hint">التوقيت من MP3Quran موثّق. التوقيت اليدوي يضبطه المستخدم بالاستماع (زر تسجيل عند بداية كل آية). ما نولّد أوقاتاً تقديرية كأنها موثّقة.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>القارئ والصوت</legend>
+          <label>ابحث عن قارئ
+            <input type="search" id="readerQ" placeholder="اكتب اسم القارئ" autocomplete="off">
+          </label>
+          <label>القارئ
+            <select id="readerSel"><option value="">جاري التحميل...</option></select>
+          </label>
+          <p class="hint" id="readerInfo"></p>
+          <div class="chips"><button id="fetchTimingBtn" class="primary" type="button">جلب الصوت والتوقيت للسورة</button></div>
+          <p class="status" id="mp3Status"></p>
+          <label>أو ارفع ملف صوت للقارئ
+            <input type="file" id="audioFile" accept="audio/*">
+          </label>
+          <label>اسم القارئ على المقطع
+            <input type="text" data-bind="reciterName">
+          </label>
+        </fieldset>
+
+        <div class="stepnav">
+          <span></span>
+          <button data-go="2" class="primary" type="button">التالي: التصميم</button>
+        </div>
+      </section>
+
+      <!-- الخطوة 2 -->
+      <section class="step panel" data-step-panel="2" hidden>
+        <h2>2. تخصيص التصميم</h2>
+
+        <p class="hint">قوالب جاهزة (تغيّر الألوان والإطار والخط):</p>
+        <div class="presets">
+          <button type="button" data-preset="classic">ذهبي كلاسيكي</button>
+          <button type="button" data-preset="ivory">عاجي هادئ</button>
+          <button type="button" data-preset="emerald">زمردي</button>
+          <button type="button" data-preset="minimal">بسيط</button>
+        </div>
+
+        <fieldset>
+          <legend>المقاس والدقة</legend>
+          <div class="row2">
+            <label>نسبة العرض للارتفاع
+              <select data-bind="design.aspect">
+                <option value="9:16">9:16 ريلز وتيك توك</option>
+                <option value="16:9">16:9 يوتيوب</option>
+                <option value="1:1">1:1 مربع</option>
+                <option value="4:5">4:5 إنستغرام</option>
+                <option value="custom">مقاس مخصص</option>
+              </select>
+            </label>
+            <label>الدقة
+              <select data-bind="design.res" data-kind="int">
+                <option value="720">720p</option>
+                <option value="1080">1080p</option>
+                <option value="1440">1440p</option>
+                <option value="2160">2160p (4K)</option>
+              </select>
+            </label>
+          </div>
+          <p class="warn" id="res4kWarn" hidden>4K: التسجيل أبطأ بكثير ويحتاج جهازاً قوياً، وقد يفشل على الأجهزة الضعيفة أو يخرج بجودة أقل من المتوقع. جرّب 1080p أولاً.</p>
+          <div class="row2" id="customDims" hidden>
+            <label>العرض (بكسل) <input type="number" data-bind="design.customW" data-kind="int" min="240" max="3840" step="2"></label>
+            <label>الارتفاع (بكسل) <input type="number" data-bind="design.customH" data-kind="int" min="240" max="3840" step="2"></label>
+          </div>
+          <p class="hint" id="dimsInfo"></p>
+          <label class="inline"><input type="checkbox" data-bind="lightMode"> وضع خفيف للأجهزة الضعيفة (أقصى 720p، بدون تمويه الخلفية)</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>النص القرآني</legend>
+          <label>موضع النص
+            <select data-bind="design.textPos">
+              <option value="top">أعلى</option>
+              <option value="center">وسط</option>
+              <option value="bottom">أسفل</option>
+              <option value="custom">موضع مخصص</option>
+            </select>
+          </label>
+          <label id="customYRow" hidden>الموضع المخصص (% من الارتفاع)
+            <input type="range" data-bind="design.customY" data-kind="int" min="20" max="80">
+          </label>
+          <label>الخط
+            <select data-bind="design.fontFamily">
+              <option value="Amiri Quran">Amiri Quran</option>
+              <option value="Amiri">Amiri</option>
+              <option value="Scheherazade New">Scheherazade New</option>
+              <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+            </select>
+          </label>
+          <p class="hint">خط KFGQPC غير مرفق لأن ترخيصه لا يسمح بإعادة التوزيع هنا. إذا عندك نسخة وترخيصها يسمح بذلك، ارفعها أدناه. تبقى على جهازك فقط.</p>
+          <div class="row2">
+            <label>ارفع خطاً من جهازك (TTF أو OTF أو WOFF)
+              <input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2">
+            </label>
+            <button id="removeFontBtn" type="button" hidden>حذف الخط المرفوع</button>
+          </div>
+          <p class="status" id="fontStatus"></p>
+          <label>حجم الخط <input type="range" data-bind="design.fontSize" data-kind="int" min="60" max="160"></label>
+          <div class="row2">
+            <label>لون النص <input type="color" data-bind="design.color"></label>
+            <label>الشفافية <input type="range" data-bind="design.opacity" data-kind="int" min="20" max="100"></label>
+          </div>
+          <div class="row2">
+            <label>ارتفاع السطر <input type="range" data-bind="design.lineHeight" data-kind="int" min="120" max="260"></label>
+            <label>تباعد الحروف <input type="range" data-bind="design.letterSpacing" data-kind="int" min="0" max="10"></label>
+          </div>
+          <div class="row2">
+            <label>المحاذاة
+              <select data-bind="design.align">
+                <option value="center">وسط</option>
+                <option value="right">يمين</option>
+                <option value="left">يسار</option>
+              </select>
+            </label>
+            <label>شكل رقم الآية
+              <select data-bind="design.numberStyle">
+                <option value="circle">دائرة ذهبية</option>
+                <option value="paren">بين قوسين</option>
+                <option value="none">بدون رقم</option>
+              </select>
+            </label>
+          </div>
+          <label class="inline"><input type="checkbox" data-bind="design.shadow"> ظل خفيف للنص</label>
+          <label class="inline"><input type="checkbox" data-bind="design.boxOn"> خلفية خلف النص</label>
+          <div class="row2">
+            <label>لون الخلفية <input type="color" data-bind="design.boxColor"></label>
+            <label>شفافية الخلفية <input type="range" data-bind="design.boxOpacity" data-kind="int" min="0" max="100"></label>
+          </div>
+          <label>إطار زخرفي
+            <select data-bind="design.frame">
+              <option value="none">بدون</option>
+              <option value="gold">إطار ذهبي</option>
+              <option value="double">إطار مزدوج</option>
+            </select>
+          </label>
+          <label>مدة الظهور والاختفاء <span id="fadeLabel"></span>
+            <input type="range" data-bind="design.fadeMs" data-kind="int" min="100" max="1500" step="50">
+          </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>الترجمة (ترجمة معاني)</legend>
+          <label class="inline"><input type="checkbox" data-bind="trans.on"> إظهار الترجمة</label>
+          <div class="opts" id="transOpts">
+            <label>اللغة
+              <select data-bind="trans.edition">
+                <option value="en.sahih">English — Saheeh International</option>
+                <option value="fr.hamidullah">Français — Hamidullah</option>
+                <option value="tr.diyanet">Türkçe — Diyanet</option>
+                <option value="ur.jalandhry">اردو — جالندھری</option>
+                <option value="id.indonesian">Bahasa Indonesia — Kemenag</option>
+              </select>
+            </label>
+            <div class="row2">
+              <label>حجم الخط <input type="range" data-bind="trans.size" data-kind="int" min="60" max="160"></label>
+              <label>لون النص <input type="color" data-bind="trans.color"></label>
+            </div>
+            <div class="row2">
+              <label>الموضع
+                <select data-bind="trans.pos">
+                  <option value="below">تحت الآية</option>
+                  <option value="above">فوق الآية</option>
+                </select>
+              </label>
+              <label>المحاذاة
+                <select data-bind="trans.align">
+                  <option value="center">وسط</option>
+                  <option value="right">يمين</option>
+                  <option value="left">يسار</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <p class="hint" id="transNote"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>التفسير</legend>
+          <label class="inline"><input type="checkbox" data-bind="tafsir.on"> إظهار التفسير</label>
+          <div class="opts" id="tafsirOpts">
+            <label>المصدر
+              <select data-bind="tafsir.edition">
+                <option value="ar.muyassar">التفسير الميسر</option>
+              </select>
+            </label>
+            <div class="row2">
+              <label>الخط
+                <select data-bind="tafsir.family">
+                  <option value="Noto Naskh Arabic">Noto Naskh Arabic</option>
+                  <option value="Amiri">Amiri</option>
+                  <option value="Scheherazade New">Scheherazade New</option>
+                  <option value="Amiri Quran">Amiri Quran</option>
+                </select>
+              </label>
+              <label>حجم الخط <input type="range" data-bind="tafsir.size" data-kind="int" min="60" max="160"></label>
+            </div>
+            <div class="row2">
+              <label>لون النص <input type="color" data-bind="tafsir.color"></label>
+              <label>شفافية الخلفية <input type="range" data-bind="tafsir.bgOpacity" data-kind="int" min="0" max="100"></label>
+            </div>
+            <div class="row2">
+              <label>الموضع
+                <select data-bind="tafsir.pos">
+                  <option value="bottom">أسفل الشاشة</option>
+                  <option value="top">أعلى الشاشة</option>
+                </select>
+              </label>
+              <label>المحاذاة
+                <select data-bind="tafsir.align">
+                  <option value="center">وسط</option>
+                  <option value="right">يمين</option>
+                  <option value="left">يسار</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <p class="hint" id="tafsirNote"></p>
+          <p class="hint">التفسير يُجلب من alquran.cloud. لا نولّد تفسيراً بالذكاء الاصطناعي.</p>
+          <p class="status" id="editionStatus"></p>
+        </fieldset>
+
+        <fieldset>
+          <legend>الخلفيات</legend>
+          <label>صور أو فيديوهات (اختر أكثر من ملف)
+            <input type="file" id="bgFile" accept="image/*,video/*" multiple>
+          </label>
+          <div class="row">
+            <input type="color" id="bgColor" value="#0c1a22" aria-label="لون ثابت">
+            <button id="addSolidBtn" type="button">أضف لوناً ثابتاً</button>
+          </div>
+          <div class="row2">
+            <input type="search" id="bgQ" placeholder="ابحث في الخلفيات">
+            <select id="bgType">
+              <option value="all">كل الأنواع</option>
+              <option value="image">صور</option>
+              <option value="video">فيديو</option>
+              <option value="solid">ألوان</option>
+            </select>
+          </div>
+          <ul class="bg-list" id="bgList"></ul>
+          <label class="inline"><input type="checkbox" data-bind="bg.onlyFav"> التشغيل من المفضلة فقط</label>
+          <div class="row2">
+            <label>تبديل الخلفية كل (ثانية) <input type="number" data-bind="bg.interval" data-kind="int" min="2" max="60"></label>
+            <label>الحركة
+              <select data-bind="bg.motion">
+                <option value="in">تكبير بطيء</option>
+                <option value="out">تصغير بطيء</option>
+                <option value="pan">حركة جانبية خفيفة</option>
+                <option value="none">بدون حركة</option>
+              </select>
+            </label>
+          </div>
+          <label>قوة الحركة <input type="range" data-bind="bg.amount" data-kind="int" min="0" max="100"></label>
+          <button id="shuffleBtn" type="button">خلط الترتيب</button>
+          <div class="row2">
+            <label>السطوع <input type="range" data-bind="bg.brightness" data-kind="int" min="40" max="160"></label>
+            <label>التباين <input type="range" data-bind="bg.contrast" data-kind="int" min="40" max="160"></label>
+            <label>التشبّع <input type="range" data-bind="bg.saturation" data-kind="int" min="0" max="200"></label>
+            <label>التمويه <input type="range" data-bind="bg.blur" data-kind="int" min="0" max="12"></label>
+            <label>تعتيم الأطراف <input type="range" data-bind="bg.darkness" data-kind="int" min="0" max="100"></label>
+            <label>تعتيم كامل <input type="range" data-bind="bg.overlay" data-kind="int" min="0" max="80"></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>عنوان المقطع والعلامة</legend>
+          <label>عنوان المقطع <input type="text" data-bind="title"></label>
+          <label>اسم العلامة <input type="text" data-bind="brand"></label>
+        </fieldset>
+
+        <div class="stepnav">
+          <button data-go="1" type="button">السابق</button>
+          <button data-go="3" class="primary" type="button">التالي: المعاينة والتصدير</button>
+        </div>
+      </section>
+
+      <!-- الخطوة 3 -->
+      <section class="step panel" data-step-panel="3" hidden>
+        <h2>3. المعاينة والتصدير</h2>
+        <p class="hint">المعاينة في العمود الجانبي تستخدم نفس محرك الرسم الذي يُصدَّر به الفيديو.</p>
+
+        <ul class="checklist" id="checklist"></ul>
+        <p class="status" id="exportNote"></p>
+
+        <div class="row">
+          <button id="exportBtn" class="primary big" type="button">تصدير الفيديو</button>
+          <button id="cancelBtn" type="button" hidden>إلغاء</button>
+          <button id="retryBtn" type="button" hidden>إعادة المحاولة</button>
+        </div>
+        <div class="progress-head">
+          <span class="status" id="remainingText"></span>
+          <strong class="pct" id="progressPct">٠٪</strong>
+        </div>
+        <div class="progress" role="progressbar" aria-label="تقدّم التصدير"><div id="progressBar"></div></div>
+        <p class="status" id="stageText"></p>
+
+        <div id="resultBox" class="ready" hidden>
+          <div class="ready-head">
+            <span class="ready-ico" aria-hidden="true">✓</span>
+            <div class="ready-text">
+              <strong id="readyName"></strong>
+              <small id="readyMeta"></small>
+            </div>
+          </div>
+          <video id="resultVideo" controls playsinline></video>
+          <div class="chips">
+            <button id="downloadBtn" class="primary big" type="button">تحميل الملف</button>
+            <button id="shareBtn" type="button" hidden>مشاركة</button>
+          </div>
+          <a id="downloadLink" href="#" hidden>تحميل</a>
+        </div>
+
+        <p class="hint">التصدير السريع يرسم الإطارات بسرعة المعالج ولا ينتظر مدة المقطع، ويخرج MP4 (H.264 + AAC). إذا الجهاز ما يدعم ذلك، يُستخدم التسجيل المباشر، ومدته تساوي مدة المقطع.</p>
+        <p class="hint">بعد التجهيز يظهر الملف هنا، ولا يُحفظ تلقائياً. اضغط «تحميل الملف» ليُحفظ في تنزيلات الهاتف باسم السورة ورقم الآيات.</p>
+
+        <div class="stepnav">
+          <button data-go="2" type="button">السابق</button>
+          <span></span>
+        </div>
+      </section>
     </div>
-    <div class="status" id="exportStatus"></div>
-    <p><a id="downloadLink" hidden>تحميل الفيديو</a></p>
-    <p class="hint">التصدير يسجّل بالوقت الحقيقي، فمدة التسجيل تساوي مدة الصوت. أبقِ الصفحة مفتوحة وفي المقدمة حتى ينتهي.</p>
-  </section>
-</main>
+  </div>
+</section>
+
+<!-- ============ الرئيسية ============ -->
+<section data-view-panel="home" hidden>
+  <div class="page">
+    <h2>الرئيسية</h2>
+    <p class="hint">أنشئ مقطعاً قرآنياً بصوت القارئ فوق خلفياتك. كل شيء يتم على جهازك.</p>
+    <div class="quick">
+      <button class="primary big" data-go-view="create" type="button">متابعة المحرر</button>
+      <button id="homeNewBtn" type="button">＋ مشروع جديد</button>
+      <button data-go-view="drafts" type="button">مشاريعي</button>
+      <button data-go-view="library" type="button">مكتبة الخلفيات</button>
+      <button data-go-view="reciters" type="button">القرّاء</button>
+      <button data-go-view="favorites" type="button">المفضلة</button>
+    </div>
+    <h3>آخر المسودات</h3>
+    <ul class="drafts" id="homeDrafts"></ul>
+    <h3>آخر النشاط</h3>
+    <ul class="history" id="homeHistory"></ul>
+  </div>
+</section>
+
+<!-- ============ مكتبة الخلفيات ============ -->
+<section data-view-panel="library" hidden>
+  <div class="page">
+    <h2>مكتبة الخلفيات</h2>
+    <p class="hint">كل خلفية هنا لها ترخيص ومصدر ومؤلف معروض. لا نضيف أي صورة أو فيديو بدون ترخيص واضح. التفاصيل في backgrounds/LICENSES.md.</p>
+    <p class="status" id="libStatus"></p>
+    <div class="row2">
+      <input type="search" id="libQ" placeholder="ابحث بالاسم أو المؤلف أو الفئة" autocomplete="off">
+      <select id="libCat"><option value="">كل الفئات</option></select>
+    </div>
+    <div class="row2">
+      <select id="libType">
+        <option value="all">صور وفيديو</option>
+        <option value="image">صور</option>
+        <option value="video">فيديو</option>
+      </select>
+      <label class="inline"><input type="checkbox" id="libFavOnly"> المفضلة فقط</label>
+    </div>
+    <div class="chips"><button id="libRandom" type="button">اختيار عشوائي</button></div>
+    <div class="lib-preview" id="libPreview" hidden></div>
+    <div class="lib-grid" id="libGrid"></div>
+    <h3>استُخدمت مؤخراً</h3>
+    <div class="chips" id="libRecent"></div>
+  </div>
+</section>
+
+<!-- ============ القرّاء ============ -->
+<section data-view-panel="reciters" hidden>
+  <div class="page">
+    <h2>القرّاء</h2>
+    <p class="hint">القائمة من MP3Quran. التوقيت متوفر لبعض القراء والسور فقط. اختر قارئاً ثم اضغط "جلب الصوت والتوقيت" في المحرر.</p>
+    <input type="search" id="recPageQ" placeholder="ابحث عن قارئ" autocomplete="off">
+    <p class="status" id="recStatus"></p>
+    <ul class="list" id="recList"></ul>
+  </div>
+</section>
+
+<!-- ============ المفضلة ============ -->
+<section data-view-panel="favorites" hidden>
+  <div class="page">
+    <h2>المفضلة</h2>
+    <h3>خلفيات</h3>
+    <ul class="list" id="favBg"></ul>
+    <h3>قرّاء</h3>
+    <ul class="list" id="favRec"></ul>
+  </div>
+</section>
+
+<!-- ============ الإعدادات ============ -->
+<section data-view-panel="settings" hidden>
+  <div class="page">
+    <h2>الإعدادات</h2>
+
+    <fieldset>
+      <legend>المظهر</legend>
+      <label>الوضع
+        <select id="setTheme">
+          <option value="dark">داكن</option>
+          <option value="light">فاتح</option>
+        </select>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>الإعدادات الافتراضية للمشاريع الجديدة</legend>
+      <div class="row2">
+        <label>نسبة العرض للارتفاع
+          <select id="setAspect">
+            <option value="9:16">9:16 ريلز وتيك توك</option>
+            <option value="16:9">16:9 يوتيوب</option>
+            <option value="1:1">1:1 مربع</option>
+            <option value="4:5">4:5 إنستغرام</option>
+          </select>
+        </label>
+        <label>الدقة
+          <select id="setRes">
+            <option value="720">720p</option>
+            <option value="1080">1080p</option>
+            <option value="1440">1440p</option>
+            <option value="2160">2160p (4K، أبطأ)</option>
+          </select>
+        </label>
+      </div>
+      <label class="inline"><input type="checkbox" id="setLight"> وضع خفيف للأجهزة الضعيفة</label>
+      <p class="hint">تُطبَّق عند الضغط على "مشروع جديد". المشروع الحالي لا يتغيّر.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>التخزين والاتصال</legend>
+      <label class="inline"><input type="checkbox" id="setCacheAudio"> احفظ الصوت المجلوب من MP3Quran على الجهاز لإعادة استخدامه</label>
+      <p class="hint">يستهلك مساحة، وقد تصل السورة الواحدة إلى عشرات الميغابايت. المسودات والخط المرفوع لا يُمسحان بمسح الكاش.</p>
+      <p class="status" id="storageInfo"></p>
+      <div class="chips"><button id="clearCacheBtn" type="button">مسح الكاش</button></div>
+      <p class="hint">مسح الكاش يحذف نص القرآن والتفسير والترجمات وقائمة القرّاء والصوت المحفوظ. تحتاج الاتصال بالإنترنت لجلبها من جديد.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>النسخ الاحتياطي</legend>
+      <p class="hint">المسودات محفوظة على هذا الجهاز فقط. صدّر نسخة احتياطية (ملف JSON يشمل المسودات والملفات المرفوعة والمفضلة) لنقلها إلى جهاز آخر أو حفظها.</p>
+      <div class="chips">
+        <button id="backupExportBtn" class="primary" type="button">تصدير نسخة احتياطية</button>
+        <label class="btn" for="backupFile">استيراد من ملف</label>
+        <input type="file" id="backupFile" accept="application/json,.json" hidden>
+      </div>
+      <p class="status" id="backupStatus"></p>
+      <p class="hint">الاستيراد يضيف المسودات ولا يستبدل الموجود. الحد 30 مسودة، والباقي يُتخطى مع رسالة.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>سجل النشاط</legend>
+      <ul class="history" id="histList"></ul>
+      <div class="chips"><button id="histClearBtn" type="button">مسح السجل</button></div>
+      <p class="hint">السجل محفوظ على هذا الجهاز فقط.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>ما لا يتوفر بعد</legend>
+      <ul class="about-list">
+        <li>حسابات المستخدمين والمزامنة السحابية: تحتاج خادماً وتسجيل دخول لم يُضَف بعد. المتوفر الآن: النسخ الاحتياطي اليدوي.</li>
+        <li>روابط مشاركة عامة: تحتاج رفع الفيديو لخادم. المشاركة متوفرة من زر المشاركة على جهازك.</li>
+        <li>إعادة ترتيب الآيات: غير مطبّقة، لأن ترتيب الآيات يتبع المصحف.</li>
+      </ul>
+    </fieldset>
+  </div>
+</section>
+
+<!-- ============ مشاريعي ============ -->
+<section data-view-panel="drafts" hidden>
+  <div class="panel" style="margin: 16px;">
+    <h2>مشاريعي</h2>
+    <p class="hint">المسودات محفوظة على هذا الجهاز فقط، ولا تتزامن بين الأجهزة. الحد: 30 مسودة. <span id="draftCount"></span></p>
+    <div class="row">
+      <input type="text" id="draftName" placeholder="اسم المسودة (اختياري)">
+      <button id="saveDraftBtn" class="primary" type="button">حفظ المشروع الحالي</button>
+    </div>
+    <p class="status" id="draftStatus"></p>
+    <ul class="drafts" id="draftList"></ul>
+    <p class="hint">المسودة تحفظ الإعدادات والتوقيت والخلفيات والصوت المرفوع. الصوت المجلوب من MP3Quran يُحفظ أيضاً إذا نجح الجلب.</p>
+  </div>
+</section>
+
+<!-- ============ عن التطبيق ============ -->
+<section data-view-panel="about" hidden>
+  <div class="panel about" style="margin: 16px;">
+    <h2>عن التطبيق</h2>
+    <p>أداة لصنع مقاطع قرآنية بصوت القارئ: تختار الآيات، وتضبط التزامن، وتخصّص الشكل، ثم تصدّر فيديو يُحفظ على جهازك.</p>
+    <h3 style="font-size:15px; color: var(--gold); margin-top: 12px;">مصادر البيانات</h3>
+    <ul>
+      <li>نص القرآن (رسم عثماني) والتفسير الميسر والترجمات من <strong>alquran.cloud</strong>.</li>
+      <li>القرّاء وتوقيت الآيات والصوت من <strong>MP3Quran</strong>.</li>
+      <li>الترجمات هي <strong>ترجمات لمعاني القرآن</strong> وليست نصه الأصلي. الترجمة الافتراضية Saheeh International.</li>
+    </ul>
+    <h3 style="font-size:15px; color: var(--gold); margin-top: 12px;">ما هو متوفر وما هو غير متوفر</h3>
+    <ul>
+      <li><strong>مكتبة الخلفيات:</strong> بنية جاهزة وتصنيفات وتراخيص معروضة. المكتبة فارغة حتى تُضاف ملفات بترخيص مؤكد (انظر backgrounds/LICENSES.md).</li>
+      <li><strong>الخطوط:</strong> الخطوط المرفقة هي Amiri Quran وAmiri وScheherazade New وNoto Naskh Arabic. يمكنك رفع خط من جهازك. KFGQPC غير مرفق لأن ترخيصه لا يسمح بإعادة التوزيع.</li>
+      <li><strong>الحسابات والمزامنة السحابية:</strong> غير متوفرة. المسودات محلية على الجهاز، والنسخ الاحتياطي اليدوي هو البديل الحالي.</li>
+      <li><strong>روابط مشاركة عامة:</strong> غير متوفرة. الفيديو يُحفظ على جهازك ولا يُرفع لأي خادم.</li>
+      <li><strong>دقة 4K:</strong> متوفرة كخيار، لكن التسجيل أبطأ ويعتمد على قوة الجهاز.</li>
+      <li><strong>إعادة ترتيب الآيات:</strong> غير مطبّقة، لأن الترتيب يتبع المصحف.</li>
+    </ul>
+    <p class="hint">تأكد من ترخيص كل ترجمة وكل مادة صوتية ومرئية قبل النشر التجاري.</p>
+  </div>
+</section>
 
 <audio id="audio" preload="auto"></audio>
 
-<script>
-(() => {
-  "use strict";
-
-  // ---------- عناصر الصفحة ----------
-  const $ = (id) => document.getElementById(id);
-  const els = {
-    surahNo: $("surahNo"),
-    fetchBtn: $("fetchBtn"),
-    fetchStatus: $("fetchStatus"),
-    versesInput: $("versesInput"),
-    fromNo: $("fromNo"),
-    toNo: $("toNo"),
-    applyRangeBtn: $("applyRangeBtn"),
-    audioFile: $("audioFile"),
-    playBtn: $("playBtn"),
-    markBtn: $("markBtn"),
-    undoBtn: $("undoBtn"),
-    autoBtn: $("autoBtn"),
-    markInfo: $("markInfo"),
-    timelineBody: $("timelineBody"),
-    mediaFiles: $("mediaFiles"),
-    bgList: $("bgList"),
-    bgInterval: $("bgInterval"),
-    kenBurns: $("kenBurns"),
-    shuffleBtn: $("shuffleBtn"),
-    sizeSel: $("sizeSel"),
-    textColor: $("textColor"),
-    textScale: $("textScale"),
-    overlay: $("overlay"),
-    reciterName: $("reciterName"),
-    brandName: $("brandName"),
-    titleInput: $("titleInput"),
-    canvas: $("canvas"),
-    exportBtn: $("exportBtn"),
-    stopExportBtn: $("stopExportBtn"),
-    exportStatus: $("exportStatus"),
-    downloadLink: $("downloadLink"),
-    audio: $("audio"),
-    timeInfo: $("timeInfo"),
-    mp3Reciter: $("mp3Reciter"),
-    fetchMp3Btn: $("fetchMp3Btn"),
-    mp3Status: $("mp3Status"),
-  };
-  const ctx = els.canvas.getContext("2d");
-
-  const SIZES = { vertical: [1080, 1920], square: [1080, 1080], landscape: [1920, 1080] };
-  const GOLD = "#e8c968";
-  const BG_FILL = "#0c1a22";
-  const BASMALA = ["بسم", "الله", "الرحمن", "الرحيم"];
-  const MP3Q_API = "https://www.mp3quran.net/api/v3";
-
-  // ---------- الحالة ----------
-  let verses = [];        // كل آيات النص: {number, text}
-  let timeline = [];      // الآيات المختارة مع بدايتها: {number, text, start}
-  let backgrounds = [];   // {type: "image"|"video", el, name, url}
-  let audioUrl = null;
-  let audioCtx = null;
-  let mediaDest = null;
-  let recorder = null;
-  let exporting = false;
-  let lastActive = -2;
-  let lastActiveNumber = null;
-  let readers = [];        // القراء المتوفر لهم توقيت آيات
-  let pendingTiming = null; // توقيت MP3Quran ينتظر تحميل الصوت
-  let mp3Warning = "";
-
-  // ---------- مساعدات ----------
-  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
-  const toAr = (n) => String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
-  const round2 = (x) => Math.round(x * 100) / 100;
-  const fontStr = (px, weight = 400) =>
-    `${weight} ${Math.round(px)}px Amiri, "Scheherazade New", "Noto Naskh Arabic", FreeSerif, serif`;
-  const fmt = (sec) => {
-    const s = Math.max(0, Math.floor(sec || 0));
-    return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  };
-  const audioDuration = () => {
-    const d = els.audio.duration;
-    return Number.isFinite(d) && d > 0 ? d : 0;
-  };
-  const audioLoaded = () => !!els.audio.src && audioDuration() > 0;
-
-  // تطبيع الكلمة للمقارنة فقط (بدون تشكيل)
-  const normWord = (w) => w
-    .replace(/[ؐ-ًؚ-ٰٟۖ-ۭ]/g, "")
-    .replace(/ٱ/g, "ا")
-    .replace(/[^؀-ۿ]/g, "");
-
-  // إزالة البسملة من أول آية إذا كانت ملتصقة بها (ما عدا الفاتحة)
-  function stripBasmala(text) {
-    const words = text.trim().split(/\s+/);
-    if (words.length > 4 && BASMALA.every((w, i) => normWord(words[i]) === w)) {
-      return words.slice(4).join(" ");
-    }
-    return text.trim();
-  }
-
-  function parseVerses() {
-    return els.versesInput.value
-      .split("\n")
-      .map((t, i) => ({ number: i + 1, text: t.trim() }))
-      .filter((v) => v.text);
-  }
-
-  // ---------- جلب الآيات ----------
-  async function fetchSurah() {
-    const n = Math.round(Number(els.surahNo.value));
-    if (!(n >= 1 && n <= 114)) {
-      els.fetchStatus.textContent = "أدخل رقم سورة بين 1 و 114.";
-      return;
-    }
-    els.fetchStatus.textContent = "جاري الجلب...";
-    try {
-      const res = await fetch(`https://api.alquran.cloud/v1/surah/${n}/quran-uthmani`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const data = json.data;
-      const lines = data.ayahs.map((a, i) => (i === 0 && n !== 1 ? stripBasmala(a.text) : a.text.trim()));
-      els.versesInput.value = lines.join("\n");
-      els.titleInput.value = data.name;
-      els.fromNo.value = 1;
-      els.toNo.value = lines.length;
-      applyRange();
-      els.fetchStatus.textContent = `تم جلب ${data.name} (${lines.length} آية).`;
-    } catch (err) {
-      els.fetchStatus.textContent = "تعذر الجلب من الإنترنت. الصق نص الآيات يدوياً في الخانة.";
-    }
-  }
-
-  // ---------- النطاق والجدول ----------
-  function applyRange() {
-    verses = parseVerses();
-    const from = Math.max(1, Number(els.fromNo.value) || 1);
-    const to = Math.max(from, Number(els.toNo.value) || from);
-    const previous = new Map(timeline.map((v) => [v.number, v.start]));
-    timeline = verses
-      .filter((v) => v.number >= from && v.number <= to)
-      .map((v) => ({
-        number: v.number,
-        text: v.text,
-        start: previous.has(v.number) ? previous.get(v.number) : null,
-      }));
-    renderTimeline();
-  }
-
-  function renderTimeline() {
-    if (!timeline.length) {
-      els.timelineBody.innerHTML = '<tr><td colspan="4">اختر نطاق الآيات أولاً.</td></tr>';
-    } else {
-      els.timelineBody.innerHTML = timeline.map((v, i) => `
-        <tr data-number="${v.number}">
-          <td>${toAr(v.number)}</td>
-          <td class="txt">${esc(v.text)}</td>
-          <td><input type="number" step="0.01" min="0" class="startInput" data-i="${i}"
-                value="${v.start === null ? "" : v.start}"></td>
-          <td><button class="seekBtn" data-i="${i}" title="تشغيل من هنا">▶</button></td>
-        </tr>`).join("");
-    }
-    updateMarkInfo();
-    highlightRows();
-  }
-
-  function highlightRows() {
-    els.timelineBody.querySelectorAll("tr[data-number]").forEach((tr) => {
-      tr.classList.toggle("active", Number(tr.dataset.number) === lastActiveNumber);
-    });
-  }
-
-  function updateMarkInfo() {
-    if (!timeline.length) {
-      els.markInfo.textContent = "";
-      return;
-    }
-    const next = timeline.findIndex((v) => v.start === null);
-    els.markInfo.textContent = next === -1
-      ? "تم توقيت كل الآيات المختارة."
-      : `الآية التالية للتوقيت: ${toAr(timeline[next].number)}`;
-  }
-
-  els.fetchBtn.addEventListener("click", fetchSurah);
-  els.applyRangeBtn.addEventListener("click", applyRange);
-
-  els.timelineBody.addEventListener("change", (e) => {
-    const input = e.target.closest(".startInput");
-    if (!input) return;
-    const v = timeline[Number(input.dataset.i)];
-    const raw = input.value.trim();
-    v.start = raw === "" ? null : Math.max(0, Number(raw));
-    updateMarkInfo();
-  });
-
-  els.timelineBody.addEventListener("click", (e) => {
-    const btn = e.target.closest(".seekBtn");
-    if (!btn) return;
-    const v = timeline[Number(btn.dataset.i)];
-    if (v.start === null || !audioLoaded()) return;
-    ensureAudioGraph();
-    els.audio.currentTime = v.start;
-    els.audio.play().catch(() => {});
-  });
-
-  // ---------- الصوت والتوقيت ----------
-  els.audioFile.addEventListener("change", () => {
-    const file = els.audioFile.files[0];
-    if (!file) return;
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
-    audioUrl = URL.createObjectURL(file);
-    pendingTiming = null;
-    mp3Warning = "";
-    els.audio.pause();
-    els.audio.src = audioUrl;
-    timeline.forEach((v) => { v.start = null; });
-    renderTimeline();
-  });
-
-  els.audio.addEventListener("loadedmetadata", () => {
-    updateMarkInfo();
-    if (pendingTiming) applyTiming();
-  });
-
-  els.playBtn.addEventListener("click", async () => {
-    if (!audioLoaded()) return alert("ارفع ملف الصوت أولاً.");
-    ensureAudioGraph();
-    try {
-      if (els.audio.paused) await els.audio.play();
-      else els.audio.pause();
-    } catch (err) {
-      alert("ما قدرت أشغّل الصوت: " + err.message);
-    }
-  });
-
-  els.markBtn.addEventListener("click", () => {
-    if (!audioLoaded()) return alert("ارفع ملف الصوت أولاً.");
-    const i = timeline.findIndex((v) => v.start === null);
-    if (i === -1) return;
-    timeline[i].start = round2(els.audio.currentTime);
-    renderTimeline();
-  });
-
-  els.undoBtn.addEventListener("click", () => {
-    for (let i = timeline.length - 1; i >= 0; i--) {
-      if (timeline[i].start !== null) { timeline[i].start = null; break; }
-    }
-    renderTimeline();
-  });
-
-  els.autoBtn.addEventListener("click", () => {
-    const dur = audioDuration();
-    if (!dur || !timeline.length) return alert("ارفع الصوت واختر الآيات أولاً.");
-    timeline.forEach((v, i) => { v.start = round2((dur * i) / timeline.length); });
-    renderTimeline();
-  });
-
-  function ensureAudioGraph() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const source = audioCtx.createMediaElementSource(els.audio);
-      mediaDest = audioCtx.createMediaStreamDestination();
-      source.connect(audioCtx.destination);
-      source.connect(mediaDest);
-    }
-    if (audioCtx.state === "suspended") audioCtx.resume();
-  }
-
-  // المقاطع: كل آية من بدايتها إلى بداية التي بعدها (أو نهاية الصوت)
-  function segments() {
-    const marked = timeline
-      .filter((v) => v.start !== null)
-      .sort((a, b) => a.start - b.start);
-    const dur = audioDuration();
-    return marked.map((v, i) => ({
-      ...v,
-      end: i + 1 < marked.length ? marked[i + 1].start : (dur || v.start + 5),
-    }));
-  }
-
-  // ---------- الخلفيات ----------
-  function addBackground(file) {
-    const url = URL.createObjectURL(file);
-    if (file.type.startsWith("video/")) {
-      const el = document.createElement("video");
-      el.muted = true;
-      el.loop = true;
-      el.playsInline = true;
-      el.preload = "auto";
-      el.src = url;
-      backgrounds.push({ type: "video", el, name: file.name, url });
-    } else {
-      const el = new Image();
-      el.src = url;
-      backgrounds.push({ type: "image", el, name: file.name, url });
-    }
-  }
-
-  function renderBgList() {
-    els.bgList.innerHTML = backgrounds.length
-      ? backgrounds.map((b, i) =>
-          `<li><span>${esc(b.name)}</span><button class="rmBtn" data-i="${i}">حذف</button></li>`).join("")
-      : "<li>ما في خلفيات، رح تنحط خلفية داكنة افتراضية.</li>";
-  }
-
-  els.mediaFiles.addEventListener("change", () => {
-    for (const file of els.mediaFiles.files) addBackground(file);
-    els.mediaFiles.value = "";
-    lastActive = -2;
-    renderBgList();
-  });
-
-  els.bgList.addEventListener("click", (e) => {
-    const btn = e.target.closest(".rmBtn");
-    if (!btn) return;
-    const [removed] = backgrounds.splice(Number(btn.dataset.i), 1);
-    if (removed) {
-      if (removed.el.pause) removed.el.pause();
-      URL.revokeObjectURL(removed.url);
-    }
-    lastActive = -2;
-    renderBgList();
-  });
-
-  els.shuffleBtn.addEventListener("click", () => {
-    for (let i = backgrounds.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [backgrounds[i], backgrounds[j]] = [backgrounds[j], backgrounds[i]];
-    }
-    lastActive = -2;
-    renderBgList();
-  });
-
-  // تشغيل فيديو الخلفية النشط فقط، وإيقاف البقية
-  function syncVideos(activeIdx, playing) {
-    const changed = activeIdx !== lastActive;
-    lastActive = activeIdx;
-    backgrounds.forEach((b, i) => {
-      if (b.type !== "video") return;
-      if (i === activeIdx && playing) {
-        if (changed) b.el.currentTime = 0;
-        if (b.el.paused) b.el.play().catch(() => {});
-      } else if (!b.el.paused) {
-        b.el.pause();
-      }
-    });
-  }
-
-  // ---------- الرسم ----------
-  function settings() {
-    const [w, h] = SIZES[els.sizeSel.value];
-    return {
-      w,
-      h,
-      unit: Math.min(w, h),
-      scale: Number(els.textScale.value) / 100,
-      color: els.textColor.value,
-      overlay: Number(els.overlay.value) / 100,
-      kb: els.kenBurns.checked,
-      interval: Math.max(1, Number(els.bgInterval.value) || 8),
-    };
-  }
-
-  function drawBackground(t, s, playing) {
-    ctx.fillStyle = BG_FILL;
-    ctx.fillRect(0, 0, s.w, s.h);
-    if (!backgrounds.length) {
-      syncVideos(-1, false);
-      return;
-    }
-    const idx = Math.floor(t / s.interval) % backgrounds.length;
-    syncVideos(idx, playing);
-
-    const bg = backgrounds[idx];
-    const media = bg.el;
-    const sw = bg.type === "video" ? media.videoWidth : media.naturalWidth;
-    const sh = bg.type === "video" ? media.videoHeight : media.naturalHeight;
-    if (!sw || !sh) return;
-
-    const local = Math.min(1, (t % s.interval) / s.interval);
-    let scale = Math.max(s.w / sw, s.h / sh);
-    if (s.kb) scale *= 1 + 0.08 * local;
-    const dw = sw * scale;
-    const dh = sh * scale;
-    ctx.drawImage(media, (s.w - dw) / 2, (s.h - dh) / 2, dw, dh);
-  }
-
-  function drawOverlay(s) {
-    ctx.save();
-    ctx.fillStyle = `rgba(0, 0, 0, ${s.overlay})`;
-    ctx.fillRect(0, 0, s.w, s.h);
-    const g = ctx.createRadialGradient(
-      s.w / 2, s.h / 2, s.unit * 0.25,
-      s.w / 2, s.h / 2, Math.max(s.w, s.h) * 0.75
-    );
-    g.addColorStop(0, "rgba(0, 0, 0, 0)");
-    g.addColorStop(1, "rgba(0, 0, 0, 0.55)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, s.w, s.h);
-    ctx.restore();
-  }
-
-  function drawHeader(s) {
-    const title = els.titleInput.value.trim();
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-    ctx.shadowBlur = s.unit * 0.01;
-    if (title) {
-      ctx.fillStyle = GOLD;
-      ctx.font = fontStr(s.unit * 0.05, 700);
-      ctx.fillText(title, s.w / 2, s.h * 0.085);
-    }
-    if (timeline.length) {
-      const from = timeline[0].number;
-      const to = timeline[timeline.length - 1].number;
-      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-      ctx.font = fontStr(s.unit * 0.03, 400);
-      ctx.fillText(`الآيات من ${toAr(from)} إلى ${toAr(to)}`, s.w / 2, s.h * 0.085 + s.unit * 0.07);
-    }
-    ctx.restore();
-  }
-
-  function wrapText(text, maxWidth) {
-    const words = text.split(/\s+/);
-    const lines = [];
-    let line = "";
-    for (const word of words) {
-      const candidate = line ? `${line} ${word}` : word;
-      if (line && ctx.measureText(candidate).width > maxWidth) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = candidate;
-      }
-    }
-    if (line) lines.push(line);
-    return lines;
-  }
-
-  function drawVerse(seg, t, s) {
-    const fadeIn = Math.min(1, (t - seg.start) / 0.4);
-    const fadeOut = Math.min(1, (seg.end - t) / 0.4);
-    const alpha = Math.max(0, Math.min(fadeIn, fadeOut));
-    if (alpha <= 0) return;
-
-    const px = s.unit * 0.062 * s.scale;
-    const lh = px * 1.8;
-    const markerR = s.unit * 0.028;
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = fontStr(px, 400);
-    const lines = wrapText(seg.text, s.w * 0.82);
-
-    const blockH = (lines.length - 1) * lh + lh * 1.35 + markerR * 2;
-    const top = s.h / 2 - blockH / 2;
-    const firstY = top + lh / 2;
-
-    ctx.fillStyle = s.color;
-    ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
-    ctx.shadowBlur = s.unit * 0.012;
-    lines.forEach((line, i) => ctx.fillText(line, s.w / 2, firstY + i * lh));
-
-    // علامة رقم الآية
-    ctx.shadowBlur = 0;
-    const my = firstY + (lines.length - 1) * lh + lh * 0.85 + markerR;
-    ctx.strokeStyle = GOLD;
-    ctx.lineWidth = Math.max(2, s.unit * 0.0025);
-    ctx.beginPath();
-    ctx.arc(s.w / 2, my, markerR, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = GOLD;
-    ctx.font = fontStr(markerR * 1.15, 400);
-    ctx.fillText(toAr(seg.number), s.w / 2, my + markerR * 0.05);
-    ctx.restore();
-  }
-
-  function drawFooter(s) {
-    const reciter = els.reciterName.value.trim();
-    const brand = els.brandName.value.trim();
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
-    ctx.shadowBlur = s.unit * 0.01;
-    if (reciter) {
-      ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-      ctx.font = fontStr(s.unit * 0.032, 400);
-      ctx.fillText(reciter, s.w / 2, s.h * 0.885);
-    }
-    if (brand) {
-      ctx.fillStyle = GOLD;
-      ctx.font = fontStr(s.unit * 0.034, 700);
-      ctx.fillText(brand, s.w / 2, s.h * 0.935);
-    }
-    ctx.restore();
-  }
-
-  function drawProgress(s, t, dur) {
-    if (!dur) return;
-    ctx.save();
-    ctx.fillStyle = GOLD;
-    ctx.globalAlpha = 0.9;
-    ctx.fillRect(0, s.h - 6, s.w * Math.min(1, t / dur), 6);
-    ctx.restore();
-  }
-
-  function frame() {
-    const s = settings();
-    if (els.canvas.width !== s.w || els.canvas.height !== s.h) {
-      els.canvas.width = s.w;
-      els.canvas.height = s.h;
-      els.canvas.style.aspectRatio = `${s.w} / ${s.h}`;
-    }
-
-    const t = els.audio.currentTime || 0;
-    const dur = audioDuration();
-    const playing = !els.audio.paused && !els.audio.ended;
-
-    drawBackground(t, s, playing);
-    drawOverlay(s);
-    drawHeader(s);
-
-    const segs = segments();
-    const idx = segs.findIndex((v) => t >= v.start && t < v.end);
-    if (idx !== -1) drawVerse(segs[idx], t, s);
-    drawFooter(s);
-    drawProgress(s, t, dur);
-
-    const activeNumber = idx === -1 ? null : segs[idx].number;
-    if (activeNumber !== lastActiveNumber) {
-      lastActiveNumber = activeNumber;
-      highlightRows();
-    }
-
-    els.timeInfo.textContent = `${fmt(t)} / ${fmt(dur)}`;
-    if (exporting) els.exportStatus.textContent = `جاري التسجيل: ${fmt(t)} من ${fmt(dur)}`;
-    requestAnimationFrame(frame);
-  }
-
-  // ---------- MP3Quran ----------
-  function setMp3Status(msg) {
-    els.mp3Status.textContent = msg;
-  }
-
-  async function loadReaders() {
-    setMp3Status("جاري تحميل قائمة القراء...");
-    try {
-      const res = await fetch(`${MP3Q_API}/ayat_timing/reads`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const list = await res.json();
-      readers = Array.isArray(list) ? list : [];
-      els.mp3Reciter.innerHTML = readers.length
-        ? '<option value="">— اختر القارئ —</option>' + readers.map((r, i) => {
-            const rewaya = typeof r.rewaya === "string" && r.rewaya ? " — " + r.rewaya : "";
-            return `<option value="${i}">${esc(r.name)}${esc(rewaya)}</option>`;
-          }).join("")
-        : '<option value="">ما في قراء متاحين</option>';
-      setMp3Status(`${readers.length} قارئ متوفر مع توقيت الآيات.`);
-    } catch (err) {
-      els.mp3Reciter.innerHTML = '<option value="">تعذر التحميل</option>';
-      setMp3Status(`تعذر تحميل قائمة القراء من MP3Quran (${err.message}).`);
-    }
-  }
-
-  // يحمّل الصوت. إذا السيرفر ما بيسمح بالتحميل عبر CORS، بيشغّل الصوت مباشرة (للمعاينة فقط).
-  async function loadRemoteAudio(url) {
-    if (audioUrl && audioUrl.startsWith("blob:")) URL.revokeObjectURL(audioUrl);
-    audioUrl = null;
-    let direct = false;
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      audioUrl = URL.createObjectURL(await res.blob());
-    } catch (err) {
-      if (String(err.message).startsWith("HTTP")) throw err; // الملف غير موجود، ما في فايدة من المحاولة المباشرة
-      direct = true;
-      audioUrl = url;
-    }
-    els.audio.pause();
-    els.audio.src = audioUrl;
-    timeline.forEach((v) => { v.start = null; });
-    renderTimeline();
-    return direct;
-  }
-
-  async function fetchFromMp3Quran() {
-    const reader = readers[Number(els.mp3Reciter.value)];
-    if (!reader) return setMp3Status("اختر القارئ أولاً.");
-    if (!reader.folder_url) return setMp3Status("هالقارئ ما عنده رابط صوت متوفر.");
-    const surah = Math.round(Number(els.surahNo.value));
-    if (!(surah >= 1 && surah <= 114)) return setMp3Status("أدخل رقم سورة بين 1 و 114.");
-
-    const base = String(reader.folder_url).replace(/\/?$/, "/");
-    const audioSrc = base + String(surah).padStart(3, "0") + ".mp3";
-    try {
-      setMp3Status("جاري جلب التوقيت...");
-      const res = await fetch(`${MP3Q_API}/ayat_timing?surah=${surah}&read=${encodeURIComponent(reader.id)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const timing = await res.json();
-      if (!Array.isArray(timing) || !timing.length) {
-        return setMp3Status("ما فيه توقيت لهالسورة عند هالقارئ.");
-      }
-      pendingTiming = timing;
-      els.reciterName.value = reader.name || "";
-      setMp3Status("جاري تحميل الصوت...");
-      const direct = await loadRemoteAudio(audioSrc);
-      mp3Warning = direct
-        ? " تنبيه: السيرفر ما بيسمح بتحميل الصوت داخل الصفحة، فالمعاينة شغالة لكن التصدير ممكن يطلع بدون صوت. للتصدير ارفع ملف الصوت يدوياً."
-        : "";
-    } catch (err) {
-      pendingTiming = null;
-      setMp3Status(`تعذر الجلب من MP3Quran (${err.message}). جرّب لاحقاً أو ارفع الصوت يدوياً.`);
-    }
-  }
-
-  // يربط توقيت الواجهة بالآيات المختارة. وحدة الوقت (ثواني أو ملّي ثانية) بتتحدد من مدة الصوت.
-  function applyTiming() {
-    const dur = audioDuration();
-    const maxEnd = Math.max(...pendingTiming.map((x) => Number(x.end_time) || 0));
-    const factor = dur && maxEnd > dur * 1.5 ? 1000 : 1;
-    const byAyah = new Map(pendingTiming.map((x) => [Number(x.ayah), Number(x.start_time) / factor]));
-
-    const missing = [];
-    let filled = 0;
-    timeline.forEach((v) => {
-      const start = byAyah.get(v.number);
-      if (Number.isFinite(start)) {
-        v.start = round2(start);
-        filled++;
-      } else {
-        v.start = null;
-        missing.push(v.number);
-      }
-    });
-    renderTimeline();
-    const note = missing.length ? ` ناقص توقيت للآيات: ${missing.map(toAr).join("، ")}.` : "";
-    setMp3Status(`تم ربط ${filled} آية بالتوقيت.${note}${mp3Warning}`);
-    pendingTiming = null;
-  }
-
-  els.fetchMp3Btn.addEventListener("click", fetchFromMp3Quran);
-
-  // ---------- الحفظ داخل تطبيق أندرويد ----------
-  // داخل التطبيق يكون window.InabaBridge موجوداً، والفيديو يتحفظ مباشرة في مجلد التنزيلات.
-  // في المتصفح العادي يكون null ونستخدم رابط التحميل المعتاد.
-  const nativeBridge = window.InabaBridge || null;
-  // مضاعف لـ 3 بايت حتى يصير كل جزء base64 مستقلاً بدون حشو في الوسط
-  const SAVE_CHUNK = 3 * 256 * 1024;
-
-  function setKeepScreen(on) {
-    try {
-      if (nativeBridge) nativeBridge.setKeepScreenOn(on);
-    } catch (_) {}
-  }
-
-  function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(blob);
-    });
-  }
-
-  async function saveToDevice(blob, fileName) {
-    if (!nativeBridge.beginSave(fileName, blob.type)) throw new Error("تعذر بدء الحفظ");
-    try {
-      for (let off = 0; off < blob.size; off += SAVE_CHUNK) {
-        const part = await blobToBase64(blob.slice(off, off + SAVE_CHUNK));
-        if (!nativeBridge.appendChunk(part)) throw new Error("تعذر كتابة جزء من الملف");
-      }
-    } catch (err) {
-      nativeBridge.cancelSave();
-      throw err;
-    }
-    const result = String(nativeBridge.endSave());
-    if (result.startsWith("ERROR")) throw new Error(result);
-    return result;
-  }
-
-  // ---------- التصدير ----------
-  function pickMime() {
-    if (!window.MediaRecorder) return null;
-    // H.264 + AAC داخل MP4 هو الأوسع توافقاً (واتساب، إنستغرام، يوتيوب)، لكن بعض المتصفحات ما بتدعمه.
-    // إذا ما توفّر، بنستخدم WebM. "video/mp4" بدون ترميز آخر حل أخير لأن بعض المتصفحات بتسجّله بـ VP9.
-    const options = [
-      "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-      "video/webm;codecs=vp9,opus",
-      "video/webm;codecs=vp8,opus",
-      "video/webm",
-      "video/mp4",
-    ];
-    return options.find((m) => MediaRecorder.isTypeSupported(m)) || null;
-  }
-
-  function setExportUi(on) {
-    els.exportBtn.disabled = on;
-    els.stopExportBtn.disabled = !on;
-  }
-
-  async function startExport() {
-    if (exporting) return;
-    if (!audioLoaded()) return alert("ارفع ملف الصوت أولاً.");
-    if (!segments().length) return alert("وقّت آية واحدة على الأقل قبل التصدير.");
-    const untimed = timeline.filter((v) => v.start === null).length;
-    if (untimed && !confirm(`فيه ${untimed} آية بدون توقيت، ما رح تظهر في الفيديو. متابعة؟`)) return;
-    const mime = pickMime();
-    if (!mime) return alert("متصفحك ما بيدعم تسجيل الفيديو. جرّب Chrome أو Edge أو Firefox.");
-
-    ensureAudioGraph();
-    await audioCtx.resume();
-
-    const stream = new MediaStream([
-      ...els.canvas.captureStream(30).getVideoTracks(),
-      ...mediaDest.stream.getAudioTracks(),
-    ]);
-    const chunks = [];
-    recorder = new MediaRecorder(stream, {
-      mimeType: mime,
-      videoBitsPerSecond: 5000000,
-      audioBitsPerSecond: 192000,
-    });
-    recorder.ondataavailable = (e) => {
-      if (e.data && e.data.size) chunks.push(e.data);
-    };
-    recorder.onstop = async () => {
-      const type = mime.split(";")[0];
-      const ext = type === "video/mp4" ? "mp4" : "webm";
-      const fileName = `inaba-surah-${els.surahNo.value}-${els.fromNo.value}-${els.toNo.value}.${ext}`;
-      const blob = new Blob(chunks, { type });
-      setKeepScreen(false);
-
-      if (nativeBridge) {
-        // ننتظر انتهاء الحفظ قبل ما نسمح بتصدير جديد، حتى ما تتداخل الملفات
-        els.exportStatus.textContent = "جارٍ حفظ الفيديو في الجهاز...";
-        try {
-          const where = await saveToDevice(blob, fileName);
-          els.exportStatus.textContent = `تم حفظ الفيديو في: ${where}`;
-        } catch (err) {
-          els.exportStatus.textContent = "تعذر حفظ الفيديو في الجهاز. حاول مرة ثانية.";
-        } finally {
-          exporting = false;
-          setExportUi(false);
-        }
-        return;
-      }
-
-      els.downloadLink.href = URL.createObjectURL(blob);
-      els.downloadLink.download = fileName;
-      els.downloadLink.hidden = false;
-      els.exportStatus.textContent = "انتهى التسجيل. اضغط تحميل الفيديو.";
-      exporting = false;
-      setExportUi(false);
-    };
-
-    exporting = true;
-    setExportUi(true);
-    els.downloadLink.hidden = true;
-    els.audio.pause();
-    els.audio.currentTime = 0;
-    setKeepScreen(true);
-    recorder.start(1000);
-    try {
-      await els.audio.play();
-    } catch (err) {
-      stopExport();
-      alert("ما قدرت أشغّل الصوت للتسجيل.");
-    }
-  }
-
-  function stopExport() {
-    els.audio.pause();
-    if (recorder && recorder.state !== "inactive") recorder.stop();
-  }
-
-  els.audio.addEventListener("ended", () => {
-    if (exporting) stopExport();
-  });
-  els.exportBtn.addEventListener("click", startExport);
-  els.stopExportBtn.addEventListener("click", stopExport);
-
-  // ---------- بدء ----------
-  renderTimeline();
-  renderBgList();
-  loadReaders();
-  requestAnimationFrame(frame);
-})();
-</script>
+<script src="js/arabic.js"></script>
+<script src="js/db.js"></script>
+<script src="js/services.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/store.js"></script>
+<script src="js/library.js"></script>
+<script src="js/mp4mux.js"></script>
+<script src="js/exporter.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
