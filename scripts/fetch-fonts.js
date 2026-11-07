@@ -52,6 +52,20 @@ function buildFontFaceCss(entries) {
   return `${blocks.join("\n\n")}\n`;
 }
 
+/** يحدد ملفات woff2 لعائلة واحدة: المتوفر منها في مجلد الحزمة، والناقص (حسب الوزن والمجموعة). */
+function planFamilyFiles(pkgName, pkgDir) {
+  const present = [];
+  const missing = [];
+  for (const weight of WEIGHTS) {
+    for (const subset of SUBSETS) {
+      const src = path.join(pkgDir, "files", `${pkgName}-${subset}-${weight}-normal.woff2`);
+      const item = { src, file: `${pkgName}-${subset}-${weight}.woff2`, weight, subset };
+      (fs.existsSync(src) ? present : missing).push(item);
+    }
+  }
+  return { present, missing };
+}
+
 async function fetchJson(url) {
   const res = await fetch(url, { headers: { "User-Agent": USER_AGENT, Accept: "application/json" } });
   if (!res.ok) throw new Error(`HTTP ${res.status} من ${url}`);
@@ -97,32 +111,28 @@ async function main() {
         throw err;
       }
 
-      // نجمع ملفات العائلة أولاً؛ إذا نقص شيء نتخطى العائلة كلها (للاختيارية) أو نفشل
-      const planned = [];
-      for (const weight of WEIGHTS) {
-        for (const subset of SUBSETS) {
-          const src = path.join(pkg.dir, "files", `${f.pkg}-${subset}-${weight}-normal.woff2`);
-          planned.push({ src, file: `${f.pkg}-${subset}-${weight}.woff2`, weight, subset });
-        }
+      // بعض الحزم تنشر أوزاناً أقل (Amiri Quran: 400 فقط)، فنأخذ المتوفر ونُبلغ عن الناقص.
+      // الحزم الأساسية يجب أن تكون كاملة، وإلا نفشل.
+      const { present, missing } = planFamilyFiles(f.pkg, pkg.dir);
+      if (missing.length && !f.optional) {
+        throw new Error(`ملفات ناقصة في ${f.pkg}: ${missing.map((m) => path.basename(m.src)).join(", ")}`);
       }
-      const missing = planned.filter((p) => !fs.existsSync(p.src));
+      if (!present.length) {
+        console.log(`تخطّي ${f.family}: لا توجد ملفات woff2 في الحزمة`);
+        continue;
+      }
       if (missing.length) {
-        const msg = `ملفات ناقصة في ${f.pkg}: ${missing.map((m) => path.basename(m.src)).join(", ")}`;
-        if (f.optional) {
-          console.log(`تخطّي ${f.family}: ${msg}`);
-          continue;
-        }
-        throw new Error(msg);
+        console.log(`  ملاحظة ${f.family}: غير منشور ${missing.map((m) => `${m.weight}/${m.subset}`).join(", ")}`);
       }
 
-      for (const p of planned) {
+      for (const p of present) {
         fs.copyFileSync(p.src, path.join(OUT, p.file));
         entries.push({ family: f.family, file: p.file, weight: p.weight, subset: p.subset });
       }
       const license = path.join(pkg.dir, "LICENSE");
       if (fs.existsSync(license)) fs.copyFileSync(license, path.join(OUT, "licenses", `${f.pkg}-LICENSE.txt`));
       credits.push({ family: f.family, pkg: f.pkg, version: pkg.version });
-      console.log(`  + ${f.family} ${pkg.version} (${planned.length} ملفات)`);
+      console.log(`  + ${f.family} ${pkg.version} (${present.length} ملفات)`);
     }
 
     if (!entries.length) throw new Error("لم يُنزَّل أي خط.");
@@ -146,7 +156,7 @@ async function main() {
   }
 }
 
-module.exports = { buildFontFaceCss, FAMILIES, UNICODE_RANGE, WEIGHTS, SUBSETS };
+module.exports = { buildFontFaceCss, planFamilyFiles, FAMILIES, UNICODE_RANGE, WEIGHTS, SUBSETS };
 
 if (require.main === module) {
   main().catch((err) => {

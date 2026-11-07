@@ -26,6 +26,23 @@ test("buildFontFaceCss writes one block per file with a relative url and unicode
   assert.doesNotMatch(css, /url\("\//);
 });
 
+test("planFamilyFiles keeps the weights a package publishes and reports the rest", () => {
+  const dir = fs.mkdtempSync(path.join(require("node:os").tmpdir(), "font-plan-"));
+  try {
+    fs.mkdirSync(path.join(dir, "files"));
+    // حزمة تنشر وزن 400 فقط (مثل Amiri Quran)
+    for (const subset of ["arabic", "latin"]) {
+      fs.writeFileSync(path.join(dir, "files", `amiri-quran-${subset}-400-normal.woff2`), "");
+    }
+    const { present, missing } = F.planFamilyFiles("amiri-quran", dir);
+    assert.deepEqual(present.map((p) => p.file).sort(), ["amiri-quran-arabic-400.woff2", "amiri-quran-latin-400.woff2"]);
+    assert.equal(missing.length, 2);
+    assert.ok(missing.every((m) => m.weight === 700));
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("every family offered by the editor is in the fetch list", () => {
   const html = fs.readFileSync(path.join(WWW, "index.html"), "utf8");
   const names = new Set(F.FAMILIES.map((f) => f.family));
