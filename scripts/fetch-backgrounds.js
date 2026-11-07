@@ -88,7 +88,13 @@ const REVIEW_EXCLUDED = new Map([
   ["commons-balance-and-strength-3853768707", "شخص يركب الأمواج في المقدمة"],
   ["commons-around-the-gro-glockner-3-798-m", "رسوم متراكبة فوق الفيديو"],
   ["commons-nascer-do-sol-em-piracicaba-24-06-2023", "نصوص متراكبة فوق الفيديو"],
-  ["commons-88-constellations-piece-13h25m0-1693-cc", "رسم خريطة نجوم وليس صورة سماء"],
+  ["commons-88-constellations-piece-13h25m0-1693-cc", "استُبعد احتياطاً: على الأرجح خريطة نجوم وليس صورة"],
+  ["commons-160316-f-yg608-296-25985448435", "آلية عسكرية في الصورة وليست طبيعة"],
+  ["commons-frozen-drop", "تجربة مخبرية بأداة، وليست طبيعة"],
+  ["commons-a-zoom-to-the-star-hd-189733", "شعار وعنوان لوكالة فضاء على الفيديو"],
+  ["commons-nasa-ocean-ecosystem-mission-ready-to-make-waves-jfkjwhcipq4", "رسم بخط اليد وليس محيطاً"],
+  ["commons-mount-bromo-hd-timelapse-movie-by-justin-ng", "بطاقة عنوان نصية في أول المقطع"],
+  ["commons-starry-sky-with-north-star-circled", "رسم توضيحي فوق الفيديو"],
 ]);
 
 // تصنيفات كومنز التي تدل على جودة مختارة من المجتمع
