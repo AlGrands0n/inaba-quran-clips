@@ -23,6 +23,16 @@
       "author": "goldpicasa"
     },
     {
+      "id": "commons-121004-m-aq224-046-8077768713",
+      "title": "121004-M-AQ224-046 (8077768713)",
+      "category": "nightsky",
+      "type": "image",
+      "file": "nightsky/121004-m-aq224-046-8077768713.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:121004-M-AQ224-046_(8077768713).jpg",
+      "author": "U.S. Department of Defense Current Photos"
+    },
+    {
       "id": "commons-151473-dry-leaves-pikiwiki-israel",
       "title": "151473 dry leaves PikiWiki Israel",
       "category": "nature",
@@ -31,16 +41,6 @@
       "license": "CC BY 2.5 — https://creativecommons.org/licenses/by/2.5/",
       "source": "https://commons.wikimedia.org/wiki/File:151473_dry_leaves_PikiWiki_Israel.jpg",
       "author": "דרור פייטלסון"
-    },
-    {
-      "id": "commons-160316-f-yg608-296-25985448435",
-      "title": "160316-F-YG608-296 (25985448435)",
-      "category": "nightsky",
-      "type": "image",
-      "file": "nightsky/160316-f-yg608-296-25985448435.jpg",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:160316-F-YG608-296_(25985448435).jpg",
-      "author": "U.S. Department of Defense Current Photos Staff Sgt. Kate Thornton/Combined Joint Task Force - Horn"
     },
     {
       "id": "commons-2011-08-27-22-23-58-nightscape-under-clouds",
@@ -193,16 +193,6 @@
       "author": "Gentry George, U.S. Fish and Wildlife Service"
     },
     {
-      "id": "commons-a-zoom-to-the-star-hd-189733",
-      "title": "A zoom to the star HD 189733",
-      "category": "nightsky",
-      "type": "video",
-      "file": "nightsky/a-zoom-to-the-star-hd-189733.mp4",
-      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:A_zoom_to_the_star_HD_189733.webm",
-      "author": "ESA/Hubble (M. Kornmesser & L. L. Christensen), A. Fujii, Robert Gendler, Digitized Sky Survey 2, Panther Observatory, S"
-    },
-    {
       "id": "commons-abends-am-see-222401769",
       "title": "Abends Am See (222401769)",
       "category": "sunset",
@@ -273,14 +263,14 @@
       "author": "Ecotrust"
     },
     {
-      "id": "commons-frozen-drop",
-      "title": "Frozen drop",
-      "category": "clouds",
+      "id": "commons-esocast-63",
+      "title": "ESOcast 63",
+      "category": "nightsky",
       "type": "video",
-      "file": "clouds/frozen-drop.mp4",
+      "file": "nightsky/esocast-63.mp4",
       "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Frozen_drop.webm",
-      "author": "Maxim Bilovitskiy"
+      "source": "https://commons.wikimedia.org/wiki/File:ESOcast_63.webm",
+      "author": "ESO"
     },
     {
       "id": "commons-goats-in-sunnyvale",
@@ -313,6 +303,16 @@
       "author": "Grand Canyon National Park"
     },
     {
+      "id": "commons-gravity-waves-ripple-over-lake-superior-cira-2025-01-16-nola",
+      "title": "Gravity Waves Ripple Over Lake Superior (CIRA 2025-01-16 - nolabels)",
+      "category": "oceans",
+      "type": "video",
+      "file": "oceans/gravity-waves-ripple-over-lake-superior-cira-2025-01-16-nola.mp4",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Gravity_Waves_Ripple_Over_Lake_Superior_(CIRA_2025-01-16_-_nolabels).webm",
+      "author": "GOES imagery: CSU/CIRA & NOAA"
+    },
+    {
       "id": "commons-hungate-canyon-in-washington",
       "title": "Hungate Canyon in Washington",
       "category": "deserts",
@@ -331,6 +331,16 @@
       "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
       "source": "https://commons.wikimedia.org/wiki/File:-i---i-_(24196687643).jpg",
       "author": "MATHIAS, M H from Guaratinguetá, Brasil"
+    },
+    {
+      "id": "commons-item",
+      "title": "မိုးတိမ်တိုက်",
+      "category": "clouds",
+      "type": "video",
+      "file": "clouds/item.mp4",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:%E1%80%99%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%90%E1%80%AD%E1%80%99%E1%80%BA%E1%80%90%E1%80%AD%E1%80%AF%E1%80%80%E1%80%BA.webm",
+      "author": "စာကလေး"
     },
     {
       "id": "commons-jnudr024-47930111511",
@@ -363,26 +373,6 @@
       "author": "Peter A. Andersen"
     },
     {
-      "id": "commons-mount-bromo-hd-timelapse-movie-by-justin-ng",
-      "title": "Mount Bromo HD Timelapse Movie by Justin Ng",
-      "category": "sunrise",
-      "type": "video",
-      "file": "sunrise/mount-bromo-hd-timelapse-movie-by-justin-ng.mp4",
-      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Mount_Bromo_HD_Timelapse_Movie_by_Justin_Ng.webm",
-      "author": "Justin Ng"
-    },
-    {
-      "id": "commons-nasa-ocean-ecosystem-mission-ready-to-make-waves-jfkjwhcipq4",
-      "title": "NASA Ocean Ecosystem Mission Ready to Make Waves jfkjwhCIpq4",
-      "category": "oceans",
-      "type": "video",
-      "file": "oceans/nasa-ocean-ecosystem-mission-ready-to-make-waves-jfkjwhcipq4.mp4",
-      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:NASA_Ocean_Ecosystem_Mission_Ready_to_Make_Waves_jfkjwhCIpq4.webm",
-      "author": "NASA Goddard"
-    },
-    {
       "id": "commons-panoramio-2538",
       "title": "- panoramio (2538)",
       "category": "forests",
@@ -413,14 +403,24 @@
       "author": "Caihm"
     },
     {
-      "id": "commons-starry-sky-with-north-star-circled",
-      "title": "Starry sky with North Star circled",
+      "id": "commons-september-27-2015-total-lunar-eclipse-view-from-the-moon",
+      "title": "September 27, 2015 Total Lunar Eclipse- View from the Moon",
+      "category": "sunrise",
+      "type": "video",
+      "file": "sunrise/september-27-2015-total-lunar-eclipse-view-from-the-moon.mp4",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:September_27,_2015_Total_Lunar_Eclipse-_View_from_the_Moon.webm",
+      "author": "NASA Scientific Visualization Studio"
+    },
+    {
+      "id": "commons-tess-completes-its-primary-mission-uoxutlpalzi",
+      "title": "TESS Completes its Primary Mission uOxuTLPAlzI",
       "category": "stars",
       "type": "video",
-      "file": "stars/starry-sky-with-north-star-circled.mp4",
-      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
-      "source": "https://commons.wikimedia.org/wiki/File:Starry_sky_with_North_Star_circled.webm",
-      "author": "Thomas Bresson"
+      "file": "stars/tess-completes-its-primary-mission-uoxutlpalzi.mp4",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:TESS_Completes_its_Primary_Mission_uOxuTLPAlzI.webm",
+      "author": "NASA Goddard"
     }
   ]
 }
