@@ -5,6 +5,9 @@
  *   CC0، والمجال العام (Public domain)، وCC BY بأي إصدار.
  * يرفض CC BY-SA و CC BY-NC و CC BY-ND وأي ترخيص آخر.
  *
+ * يفضّل الملفات المختارة بجودة في كومنز (Featured / Quality / Valued)، ويستبعد الملفات
+ * التي تصنيفها يدل على أشخاص أو شعارات أو إعلانات أو نصوص.
+ *
  * يكتب الملفات في app/src/main/assets/www/backgrounds/<الفئة>/، ثم يعيد كتابة
  * manifest.json وجدول التراخيص داخل LICENSES.md (بين علامتي AUTO).
  *
@@ -29,29 +32,35 @@ const API = "https://commons.wikimedia.org/w/api.php";
 // اسم عام للعميل، بدون بيانات شخصية. ويكيميديا تطلب اسماً واضحاً للعميل.
 const USER_AGENT = "inaba-quran-clips-background-fetch/1.0 (https://github.com/AlGrands0n/inaba-quran-clips)";
 
-// فئات التطبيق -> تصنيفات كومنز. نأخذ من كل تصنيف حتى تكتمل الحصة.
+// فئات التطبيق -> تصنيفات كومنز. نقرأ من كل تصنيف حتى حد الصفحات، ثم نختار حسب الجودة.
 const SOURCES = {
-  mountains: ["Mountains"],
-  oceans: ["Oceans"],
-  forests: ["Forests"],
+  mountains: ["Mountains", "Mountain landscapes"],
+  oceans: ["Oceans", "Seascapes", "Sea"],
+  forests: ["Forests", "Forest landscapes"],
   waterfalls: ["Waterfalls"],
-  deserts: ["Deserts"],
-  rain: ["Rain"],
+  deserts: ["Deserts", "Desert landscapes"],
+  rain: ["Rain", "Rainy weather"],
   clouds: ["Clouds"],
-  sunrise: ["Sunrises"],
-  sunset: ["Sunsets"],
-  nightsky: ["Night sky"],
-  stars: ["Starry sky"],
-  nature: ["Landscapes"],
+  sunrise: ["Sunrises", "Sunrise landscapes"],
+  sunset: ["Sunsets", "Sunset landscapes"],
+  nightsky: ["Night sky", "Starry night"],
+  stars: ["Starry sky", "Stars"],
+  nature: ["Landscapes", "Nature"],
 };
-const PHOTOS_PER_CATEGORY = 1;
+const PHOTOS_PER_CATEGORY = 3;
 const VIDEOS_PER_CATEGORY = 1;
+const MAX_PAGES_PER_SOURCE = 10; // كل صفحة 100 ملف، فالحد 1000 ملف لكل تصنيف
 const MIN_PHOTO_WIDTH = 1600;
 const MIN_VIDEO_WIDTH = 1280;
 const MIN_VIDEO_SECONDS = 4;
-const VIDEO_SECONDS = 8; // المقطع يتكرر في التطبيق، فنكتفي بجزء قصير
+const VIDEO_SECONDS = 6; // المقطع يتكرر في التطبيق، فنكتفي بجزء قصير
 const MAX_ORIGINAL_BYTES = 150 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 6 * 1024 * 1024;
+
+// تصنيفات كومنز التي تدل على جودة مختارة من المجتمع
+const QUALITY_CATEGORY_RE = /^Category:(Featured pictures|Quality images|Valued images)/i;
+// تصنيفات تدل على أشخاص أو شعارات أو إعلانات أو نصوص: نستبعد الملف
+const EXCLUDE_CATEGORY_RE = /\b(advertis\w*|logos?|brands?|posters?|signs?|portraits?|people|persons?|humans?|men|women|children|faces?|selfies?|text)\b/i;
 
 // ---------- الترخيص ----------
 
@@ -106,12 +115,17 @@ function slugify(text) {
 // ---------- تحويل نتيجة كومنز إلى عنصر في المانيفست ----------
 
 /*
- * يرجّع {skip} مع السبب، أو {item, kind, url, size} إذا كان الملف مقبولاً.
- * page: عنصر من query.pages مع prop=imageinfo (formatversion=2).
+ * يرجّع {skip} مع السبب، أو {item, kind, url, size, quality} إذا كان الملف مقبولاً.
+ * page: عنصر من query.pages مع prop=imageinfo|categories (formatversion=2).
  */
 function buildCandidate(page, category) {
   const info = page && Array.isArray(page.imageinfo) ? page.imageinfo[0] : null;
   if (!info) return { skip: "لا توجد بيانات ملف" };
+
+  const categories = (page.categories || []).map((c) => c.title || "");
+  if (categories.some((t) => EXCLUDE_CATEGORY_RE.test(t))) {
+    return { skip: "تصنيف يدل على أشخاص أو شعارات أو إعلانات" };
+  }
 
   const meta = info.extmetadata || {};
   const value = (key) => plainText(meta[key] && meta[key].value);
@@ -157,7 +171,8 @@ function buildCandidate(page, category) {
     author: author || "غير مذكور في الملف",
   };
   const url = kind === "video" ? info.url : info.thumburl || info.url;
-  return { item, kind, url, size: info.size };
+  const quality = categories.some((t) => QUALITY_CATEGORY_RE.test(t));
+  return { item, kind, url, size: info.size, quality };
 }
 
 // ---------- الشبكة والتحويل ----------
@@ -193,22 +208,30 @@ async function download(url, dest, maxBytes) {
   });
 }
 
-async function listCategory(name) {
-  const params = new URLSearchParams({
-    action: "query",
-    format: "json",
-    formatversion: "2",
-    generator: "categorymembers",
-    gcmtitle: `Category:${name}`,
-    gcmtype: "file",
-    gcmlimit: "100",
-    prop: "imageinfo",
-    iiprop: "url|size|mime|mediatype|extmetadata|duration",
-    iiurlwidth: "1920",
-    iiextmetadatafilter: "LicenseShortName|Artist|Restrictions",
-  });
-  const data = await getJson(`${API}?${params}`);
-  return (data.query && data.query.pages) || [];
+// يقرأ أعضاء تصنيف كومنز صفحة بصفحة (مع توكن المتابعة) حتى الحد
+async function* categoryPages(name, maxPages) {
+  let cont = {};
+  for (let i = 0; i < maxPages; i++) {
+    const params = new URLSearchParams({
+      action: "query",
+      format: "json",
+      formatversion: "2",
+      generator: "categorymembers",
+      gcmtitle: `Category:${name}`,
+      gcmtype: "file",
+      gcmlimit: "100",
+      prop: "imageinfo|categories",
+      iiprop: "url|size|mime|mediatype|extmetadata|duration",
+      iiurlwidth: "1920",
+      iiextmetadatafilter: "LicenseShortName|Artist|Restrictions",
+      cllimit: "max",
+      ...cont,
+    });
+    const data = await getJson(`${API}?${params}`);
+    for (const page of (data.query && data.query.pages) || []) yield page;
+    if (!data.continue) return;
+    cont = data.continue;
+  }
 }
 
 function ffmpeg(args) {
@@ -226,7 +249,7 @@ async function produce(candidate, tmpDir, outFile) {
       ffmpeg([
         "-i", src, "-t", String(VIDEO_SECONDS), "-an",
         "-vf", "scale=-2:720,fps=30,format=yuv420p",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "28", "-movflags", "+faststart",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "30", "-movflags", "+faststart",
         outFile,
       ]);
     }
@@ -289,35 +312,55 @@ async function main() {
 
   const items = [];
   for (const [category, sources] of Object.entries(SOURCES)) {
-    let photos = 0;
-    let videos = 0;
+    // 1) نجمع المرشحين من كل التصنيفات (بدون تكرار)
+    const seen = new Set();
+    const pages = [];
     for (const source of sources) {
-      if (photos >= PHOTOS_PER_CATEGORY && videos >= VIDEOS_PER_CATEGORY) break;
-      let pages = [];
       try {
-        pages = await listCategory(source);
+        for await (const page of categoryPages(source, MAX_PAGES_PER_SOURCE)) {
+          if (seen.has(page.title)) continue;
+          seen.add(page.title);
+          pages.push(page);
+        }
       } catch (err) {
         console.log(`[${category}] تعذر قراءة تصنيف "${source}": ${err.message}`);
+      }
+    }
+
+    // 2) نفلتر حسب الترخيص والنوع والجودة، ونسجّل أسباب الاستبعاد للتشخيص
+    const reasons = new Map();
+    const candidates = [];
+    for (const page of pages) {
+      const cand = buildCandidate(page, category);
+      if (cand.skip) {
+        reasons.set(cand.skip, (reasons.get(cand.skip) || 0) + 1);
         continue;
       }
-      console.log(`[${category}] "${source}": ${pages.length} ملف`);
-      for (const page of pages) {
-        if (photos >= PHOTOS_PER_CATEGORY && videos >= VIDEOS_PER_CATEGORY) break;
-        const cand = buildCandidate(page, category);
-        if (cand.skip) continue;
-        if (cand.kind === "image" && photos >= PHOTOS_PER_CATEGORY) continue;
-        if (cand.kind === "video" && videos >= VIDEOS_PER_CATEGORY) continue;
-        const outFile = path.join(BG_DIR, category, path.basename(cand.item.file));
-        try {
-          fs.mkdirSync(path.dirname(outFile), { recursive: true });
-          const size = await produce(cand, tmp, outFile);
-          items.push(cand.item);
-          if (cand.kind === "image") photos++;
-          else videos++;
-          console.log(`  + ${cand.item.file} (${Math.round(size / 1024)} ك.ب) — ${cand.item.license}`);
-        } catch (err) {
-          console.log(`  - تجاوز ${page.title}: ${err.message}`);
-        }
+      candidates.push(cand);
+    }
+    // الملفات المختارة بالجودة أولاً (الترتيب الأصلي محفوظ داخل كل مجموعة)
+    candidates.sort((a, b) => Number(b.quality) - Number(a.quality));
+    const topReasons = [...reasons.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([r, n]) => `${r} (${n})`).join("، ");
+    console.log(`[${category}] ${pages.length} ملف، مرشّح ${candidates.length}${topReasons ? ` — أكثر أسباب الاستبعاد: ${topReasons}` : ""}`);
+
+    // 3) نحمّل ونحوّل حتى تكتمل الحصة
+    let photos = 0;
+    let videos = 0;
+    for (const cand of candidates) {
+      if (photos >= PHOTOS_PER_CATEGORY && videos >= VIDEOS_PER_CATEGORY) break;
+      if (cand.kind === "image" && photos >= PHOTOS_PER_CATEGORY) continue;
+      if (cand.kind === "video" && videos >= VIDEOS_PER_CATEGORY) continue;
+      const outFile = path.join(BG_DIR, category, path.basename(cand.item.file));
+      try {
+        fs.mkdirSync(path.dirname(outFile), { recursive: true });
+        const size = await produce(cand, tmp, outFile);
+        items.push(cand.item);
+        if (cand.kind === "image") photos++;
+        else videos++;
+        console.log(`  + ${cand.item.file} (${Math.round(size / 1024)} ك.ب) — ${cand.item.license}${cand.quality ? " [مختار]" : ""}`);
+      } catch (err) {
+        console.log(`  - تجاوز ${cand.item.title}: ${err.message}`);
       }
     }
   }
