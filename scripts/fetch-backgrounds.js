@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 /*
- * يجلب خلفيات طبيعة (صور وفيديوهات قصيرة) من ويكيميديا كومنز، ويقبل فقط الملفات التي
- * ترخيصها يسمح بالاستخدام التجاري والتعديل مع ذكر المؤلف:
- *   CC0، والمجال العام (Public domain)، وCC BY بأي إصدار.
- * يرفض CC BY-SA و CC BY-NC و CC BY-ND وأي ترخيص آخر.
+ * يجلب خلفيات طبيعة (صور وفيديوهات قصيرة) من ويكيميديا كومنز، من قائمة معتمدة بعناوين الملفات.
+ * كل ملف في القائمة راجعناه يدوياً (الفئة والمحتوى والشعارات)، والسكربت لا يبحث عن ملفات جديدة،
+ * فكل تشغيل يعطي المكتبة نفسها. أي ملف جديد يُضاف إلى APPROVED بعد مراجعته.
  *
- * يفضّل الملفات المختارة بجودة في كومنز (Featured / Quality / Valued)، ويستبعد الملفات
- * التي تصنيفها يدل على أشخاص أو شعارات أو إعلانات أو نصوص.
+ * يقبل الملف فقط إذا كان ترخيصه CC0 أو المجال العام أو CC BY بأي إصدار، ويرفض CC BY-SA و CC BY-NC و CC BY-ND.
+ * إذا تعذّر أي ملف من القائمة يفشل التشغيل كله ولا تتغير المكتبة، حتى لا تنقص بصمت.
  *
  * يكتب الملفات في app/src/main/assets/www/backgrounds/<الفئة>/، ثم يعيد كتابة
  * manifest.json وجدول التراخيص داخل LICENSES.md (بين علامتي AUTO).
@@ -31,41 +30,8 @@ const LIBRARY = require(path.join(ROOT, "app", "src", "main", "assets", "www", "
 const API = "https://commons.wikimedia.org/w/api.php";
 // اسم عام للعميل، بدون بيانات شخصية. ويكيميديا تطلب اسماً واضحاً للعميل.
 const USER_AGENT = "inaba-quran-clips-background-fetch/1.0 (https://github.com/AlGrands0n/inaba-quran-clips)";
+const TITLES_PER_REQUEST = 20;
 
-// فئات التطبيق -> تصنيفات كومنز. نقرأ من كل تصنيف حتى حد الصفحات، ثم نختار حسب الجودة.
-const SOURCES = {
-  mountains: ["Mountains", "Mountain landscapes"],
-  oceans: ["Oceans", "Seascapes", "Sea"],
-  forests: ["Forests", "Forest landscapes"],
-  waterfalls: ["Waterfalls"],
-  deserts: ["Deserts", "Desert landscapes"],
-  rain: ["Rain", "Rainy weather"],
-  clouds: ["Clouds", "Cloudscapes", "Cumulus clouds"],
-  sunrise: ["Sunrises", "Sunrise landscapes"],
-  sunset: ["Sunsets", "Sunset landscapes"],
-  nightsky: ["Night sky", "Milky Way", "Starry night"],
-  stars: ["Starry sky", "Stars"],
-  nature: ["Landscapes", "Nature"],
-};
-// بحث في كومنز عن فيديوهات بكل فئة. التصنيفات أغلبها CC BY-SA، فنبحث عن الفيديو مباشرة.
-const VIDEO_QUERY = {
-  mountains: "mountains landscape",
-  oceans: "ocean waves",
-  forests: "forest nature",
-  waterfalls: "waterfall",
-  deserts: "desert landscape",
-  rain: "rain nature",
-  clouds: "clouds sky",
-  sunrise: "sunrise landscape",
-  sunset: "sunset landscape",
-  nightsky: "night sky stars",
-  stars: "starry sky",
-  nature: "nature landscape",
-};
-const MAX_SEARCH_PAGES = 3;
-const PHOTOS_PER_CATEGORY = 3;
-const VIDEOS_PER_CATEGORY = 1;
-const MAX_PAGES_PER_SOURCE = 10; // كل صفحة 100 ملف، فالحد 1000 ملف لكل تصنيف
 const MIN_PHOTO_WIDTH = 1600;
 const MIN_VIDEO_WIDTH = 1280;
 const MIN_VIDEO_SECONDS = 4;
@@ -73,33 +39,74 @@ const VIDEO_SECONDS = 6; // المقطع يتكرر في التطبيق، فنك
 const MAX_ORIGINAL_BYTES = 150 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 6 * 1024 * 1024;
 
-// مراجعة يدوية بعد التشغيل: ملفات قبلها الفلتر الآلي لكن محتواها لا يناسب الخلفيات.
-// المفتاح هو معرّف العنصر في المانيفست، والقيمة سبب الاستبعاد. أي ملف جديد يُراجَع بنفس الطريقة.
-const REVIEW_EXCLUDED = new Map([
-  ["commons-tripoloskifotografiallc-1", "علامة نصية (حقوق) في الزاوية"],
-  ["commons-tripoloskifotografiallc-3", "علامة نصية (حقوق) في الزاوية"],
-  ["commons-two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la", "ليس سحاباً، نبتة أمام السماء"],
-  ["commons-hands-4650623766", "طريق ليلاً وليس طبيعة"],
-  ["commons-2011-07-29-deep-sky-7", "وهج مدينة وليس سماء ليلية"],
-  ["commons-2011-07-29-deep-sky-8", "غروب وأشجار وليس سماء ليلية"],
-  ["commons-2011-07-29-deep-sky-8-2", "غروب وأشجار وليس سماء ليلية"],
-  ["commons-starless-core-l1014", "رسم معلوماتي فيه نصوص"],
-  ["commons-never-quite-the-same", "شعار وعبارة نصية على الصورة"],
-  ["commons-balance-and-strength-3853768707", "شخص يركب الأمواج في المقدمة"],
-  ["commons-around-the-gro-glockner-3-798-m", "رسوم متراكبة فوق الفيديو"],
-  ["commons-nascer-do-sol-em-piracicaba-24-06-2023", "نصوص متراكبة فوق الفيديو"],
-  ["commons-88-constellations-piece-13h25m0-1693-cc", "استُبعد احتياطاً: على الأرجح خريطة نجوم وليس صورة"],
-  ["commons-160316-f-yg608-296-25985448435", "آلية عسكرية في الصورة وليست طبيعة"],
-  ["commons-frozen-drop", "تجربة مخبرية بأداة، وليست طبيعة"],
-  ["commons-a-zoom-to-the-star-hd-189733", "شعار وعنوان لوكالة فضاء على الفيديو"],
-  ["commons-nasa-ocean-ecosystem-mission-ready-to-make-waves-jfkjwhcipq4", "رسم بخط اليد وليس محيطاً"],
-  ["commons-mount-bromo-hd-timelapse-movie-by-justin-ng", "بطاقة عنوان نصية في أول المقطع"],
-  ["commons-starry-sky-with-north-star-circled", "رسم توضيحي فوق الفيديو"],
-]);
+// القائمة المعتمدة: عنوان الملف في كومنز + فئته في التطبيق.
+// راجعنا كل ملف بصرياً (إطارات من الفيديو) وتأكدنا من الترخيص وغياب الشعارات والنصوص.
+const APPROVED = [
+  { category: "clouds", title: "File:မိုးတိမ်တိုက်.webm" },
 
-// تصنيفات كومنز التي تدل على جودة مختارة من المجتمع
-const QUALITY_CATEGORY_RE = /^Category:(Featured pictures|Quality images|Valued images)/i;
-// تصنيفات تدل على أشخاص أو شعارات أو إعلانات أو نصوص: نستبعد الملف
+  { category: "deserts", title: "File:A scenic view of lands on the desert.jpg" },
+  { category: "deserts", title: "File:A scenic view of the desert with mountains in the background on the desert.jpg" },
+  { category: "deserts", title: "File:A view of the desert with sand dunes in the foreground and mountains in the background.jpg" },
+  { category: "deserts", title: "File:Hungate Canyon in Washington.webm" },
+
+  { category: "forests", title: "File:- panoramio (2538).jpg" },
+  { category: "forests", title: "File:- panoramio (4047).jpg" },
+  { category: "forests", title: "File:08020047.JPG" },
+  { category: "forests", title: "File:Desolation Creek in Oregon, USA.webm" },
+
+  { category: "mountains", title: "File:20160919164811 - Black Mountain south of Cooktown (29264110154).jpg" },
+  { category: "mountains", title: "File:20161022143430 - Hills beyond Childers (29890269773).jpg" },
+  { category: "mountains", title: "File:500px photo (134652121).jpeg" },
+
+  { category: "nature", title: "File:151473 dry leaves PikiWiki Israel.jpg" },
+  { category: "nature", title: "File:Goats in Sunnyvale.webm" },
+  { category: "nature", title: "File:Graceful Birds in the Sky-Amazing Bird Sound-User FREE Videos.webm" },
+  { category: "nature", title: "File:JNUDR024 (47930111511).jpg" },
+  { category: "nature", title: "File:La Vigolana vista dalla strada vecchia per Vigolo Vattaro.jpg" },
+
+  { category: "nightsky", title: "File:2011-08-27 22-23-58-nightscape-under-clouds.jpg" },
+  { category: "nightsky", title: "File:2011-08-27 22-34-12-iridium-flare.jpg" },
+  { category: "nightsky", title: "File:ESOcast 63.webm" },
+
+  { category: "oceans", title: "File:08040 Baunei, Province of Ogliastra, Italy - panoramio (2).jpg" },
+  { category: "oceans", title: "File:2016 366 76 West (25849338025).jpg" },
+  { category: "oceans", title: "File:500px photo (32815753).jpeg" },
+
+  { category: "rain", title: "File:Grand Canyon National Park Bright and Colorful - After a Gentle Rain (13115283315).webm" },
+
+  { category: "stars", title: "File:-i---i- (24196687643).jpg" },
+  { category: "stars", title: "File:30010035352 Jpg (195626321).jpeg" },
+  { category: "stars", title: "File:88 Constellations Piece (17h21m-30-1706-CC).jpg" },
+
+  { category: "sunrise", title: "File:500px photo (44617892).jpeg" },
+  { category: "sunrise", title: "File:AS09-20-3175 (21317153313).jpg" },
+  { category: "sunrise", title: "File:Adriel Kloppenburg 2015-04-15 (Unsplash UYtyy-K1nS8).jpg" },
+
+  { category: "sunset", title: "File:Abends Am See (222401769).jpeg" },
+  { category: "sunset", title: "File:Adriel Kloppenburg 2015-04-15 (Unsplash TyWBZWsZSSg).jpg" },
+  { category: "sunset", title: "File:Anthony DELANOIX 2015-04-14 (Unsplash).jpg" },
+  { category: "sunset", title: "File:Clouds at sunset (time lapse).webm" },
+
+  { category: "waterfalls", title: "File:- panoramio - Caihm (1).jpg" },
+  { category: "waterfalls", title: "File:500px photo (240996567).jpeg" },
+  { category: "waterfalls", title: "File:500px photo (61931629).jpeg" },
+  { category: "waterfalls", title: "File:Krimmler Wasserfaelle Waterfall in Austria Biggest from Europe 380m at the top.webm" },
+];
+
+// مرفوضة بعد المراجعة ولا تُضاف (للمرجع):
+//  - علامات نصية أو شعارات أو بطاقات عنوان على الفيديو: tripoloskifotografiallc-1 و-3، never-quite-the-same،
+//    around-the-gro-glockner-3-798-m، nascer-do-sol-em-piracicaba، mount-bromo، a-zoom-to-the-star،
+//    starry-sky-with-north-star-circled، gravity-waves-ripple-over-lake-superior (شعار في الزاوية)
+//  - ليست طبيعة أو ليست صورة طبيعية: two-slender-stems (نبتة)، hands-4650623766 (طريق ليلاً)، deep-sky-7 و-8 (وهج مدينة أو غروب)،
+//    balance-and-strength (شخص يركب الأمواج)، 160316-f-yg608 (آلية عسكرية)، 121004-m-aq224 (طائرة عسكرية)،
+//    frozen-drop (تجربة مخبرية)، nasa-ocean-ecosystem (رسم يدوي)، starless-core-l1014 (رسم معلوماتي فيه نصوص)،
+//    tess-completes-its-primary-mission (مركبة فضائية متحركة)، september-27-2015-total-lunar-eclipse (رسم فضائي)،
+//    88-constellations-13h25m (خريطة نجوم على الأرجح)
+
+// الفئات المستخدمة في القائمة (بدون تكرار)
+const CATEGORY_KEYS = [...new Set(APPROVED.map((a) => a.category))];
+
+// تصنيفات كومنز التي تدل على أشخاص أو شعارات أو إعلانات أو نصوص: نرفض الملف
 const EXCLUDE_CATEGORY_RE = /\b(advertis\w*|logos?|brands?|posters?|signs?|portraits?|people|persons?|humans?|men|women|children|faces?|selfies?|text)\b/i;
 
 // ---------- الترخيص ----------
@@ -152,10 +159,14 @@ function slugify(text) {
   return s || "item";
 }
 
+function normalizeTitle(title) {
+  return String(title || "").replace(/_/g, " ").trim();
+}
+
 // ---------- تحويل نتيجة كومنز إلى عنصر في المانيفست ----------
 
 /*
- * يرجّع {skip} مع السبب، أو {item, kind, url, size, quality} إذا كان الملف مقبولاً.
+ * يرجّع {skip} مع السبب، أو {item, kind, url, size} إذا كان الملف مقبولاً.
  * page: عنصر من query.pages مع prop=imageinfo|categories (formatversion=2).
  */
 function buildCandidate(page, category) {
@@ -210,10 +221,8 @@ function buildCandidate(page, category) {
     source: info.descriptionurl || page.title,
     author: author || "غير مذكور في الملف",
   };
-  if (REVIEW_EXCLUDED.has(item.id)) return { skip: `مستبعد بعد المراجعة: ${REVIEW_EXCLUDED.get(item.id)}` };
   const url = kind === "video" ? info.url : info.thumburl || info.url;
-  const quality = categories.some((t) => QUALITY_CATEGORY_RE.test(t));
-  return { item, kind, url, size: info.size, quality };
+  return { item, kind, url, size: info.size };
 }
 
 // ---------- الشبكة والتحويل ----------
@@ -249,30 +258,25 @@ async function download(url, dest, maxBytes) {
   });
 }
 
-// يقرأ ملفات من تصنيف كومنز أو من بحث كومنز، صفحة بصفحة (مع توكن المتابعة) حتى الحد
-async function* filePages(spec, maxPages) {
-  const base = spec.search
-    ? { generator: "search", gsrsearch: spec.search, gsrnamespace: "6", gsrlimit: "100" }
-    : { generator: "categorymembers", gcmtitle: `Category:${spec.category}`, gcmtype: "file", gcmlimit: "100" };
-  let cont = {};
-  for (let i = 0; i < maxPages; i++) {
+// يجلب بيانات ملفات محددة بعناوينها (على دفعات)، بدون بحث
+async function fetchPagesByTitle(titles) {
+  const pages = [];
+  for (let i = 0; i < titles.length; i += TITLES_PER_REQUEST) {
     const params = new URLSearchParams({
       action: "query",
       format: "json",
       formatversion: "2",
-      ...base,
+      titles: titles.slice(i, i + TITLES_PER_REQUEST).join("|"),
       prop: "imageinfo|categories",
       iiprop: "url|size|mime|mediatype|extmetadata|duration",
       iiurlwidth: "1920",
       iiextmetadatafilter: "LicenseShortName|Artist|Restrictions",
       cllimit: "max",
-      ...cont,
     });
     const data = await getJson(`${API}?${params}`);
-    for (const page of (data.query && data.query.pages) || []) yield page;
-    if (!data.continue) return;
-    cont = data.continue;
+    pages.push(...((data.query && data.query.pages) || []));
   }
+  return pages;
 }
 
 function ffmpeg(args) {
@@ -346,77 +350,60 @@ async function main() {
   }
 
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "bg-fetch-"));
-  // نبدأ من فئات نظيفة، فالتشغيل الجديد يستبدل القديم
-  for (const category of Object.keys(SOURCES)) {
-    fs.rmSync(path.join(BG_DIR, category), { recursive: true, force: true });
-  }
-
+  const stage = path.join(tmp, "out");
   const items = [];
-  const usedTitles = new Set(); // كل ملف يظهر في فئة واحدة فقط
-  for (const [category, sources] of Object.entries(SOURCES)) {
-    // 1) نجمع المرشحين من التصنيفات وبحث الفيديو (بدون تكرار)
-    const seen = new Set();
-    const pages = [];
-    const specs = [
-      ...sources.map((name) => ({ category: name, max: MAX_PAGES_PER_SOURCE })),
-      { search: `filetype:video ${VIDEO_QUERY[category]}`, max: MAX_SEARCH_PAGES },
-    ];
-    for (const spec of specs) {
-      try {
-        for await (const page of filePages(spec, spec.max)) {
-          if (seen.has(page.title)) continue;
-          seen.add(page.title);
-          pages.push(page);
-        }
-      } catch (err) {
-        console.log(`[${category}] تعذر قراءة "${spec.category || spec.search}": ${err.message}`);
-      }
-    }
+  const failures = [];
+  const ids = new Set();
+  try {
+    // 1) نجلب بيانات كل الملفات المعتمدة بعناوينها
+    const pages = await fetchPagesByTitle(APPROVED.map((a) => a.title));
+    const byTitle = new Map(pages.map((p) => [normalizeTitle(p.title), p]));
 
-    // 2) نفلتر حسب الترخيص والنوع والجودة، ونسجّل أسباب الاستبعاد للتشخيص
-    const reasons = new Map();
-    const candidates = [];
-    for (const page of pages) {
-      const cand = buildCandidate(page, category);
-      if (cand.skip) {
-        reasons.set(cand.skip, (reasons.get(cand.skip) || 0) + 1);
+    // 2) نتحقق من كل ملف ونحوّله إلى مجلد مؤقت (المكتبة لم تتغير بعد)
+    for (const entry of APPROVED) {
+      const page = byTitle.get(normalizeTitle(entry.title));
+      if (!page || page.missing) {
+        failures.push(`${entry.title}: غير موجود في كومنز`);
         continue;
       }
-      candidates.push(cand);
-    }
-    // الملفات المختارة بالجودة أولاً (الترتيب الأصلي محفوظ داخل كل مجموعة)
-    candidates.sort((a, b) => Number(b.quality) - Number(a.quality));
-    const topReasons = [...reasons.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
-      .map(([r, n]) => `${r} (${n})`).join("، ");
-    console.log(`[${category}] ${pages.length} ملف، مرشّح ${candidates.length}${topReasons ? ` — أكثر أسباب الاستبعاد: ${topReasons}` : ""}`);
-
-    // 3) نحمّل ونحوّل حتى تكتمل الحصة
-    let photos = 0;
-    let videos = 0;
-    for (const cand of candidates) {
-      if (photos >= PHOTOS_PER_CATEGORY && videos >= VIDEOS_PER_CATEGORY) break;
-      if (cand.kind === "image" && photos >= PHOTOS_PER_CATEGORY) continue;
-      if (cand.kind === "video" && videos >= VIDEOS_PER_CATEGORY) continue;
-      if (usedTitles.has(cand.item.title)) continue;
-      const outFile = path.join(BG_DIR, category, path.basename(cand.item.file));
+      const cand = buildCandidate(page, entry.category);
+      if (cand.skip) {
+        failures.push(`${entry.title}: ${cand.skip}`);
+        continue;
+      }
+      if (ids.has(cand.item.id)) {
+        failures.push(`${entry.title}: معرّف مكرر ${cand.item.id}`);
+        continue;
+      }
+      const outFile = path.join(stage, entry.category, path.basename(cand.item.file));
       try {
         fs.mkdirSync(path.dirname(outFile), { recursive: true });
         const size = await produce(cand, tmp, outFile);
+        ids.add(cand.item.id);
         items.push(cand.item);
-        usedTitles.add(cand.item.title);
-        if (cand.kind === "image") photos++;
-        else videos++;
-        console.log(`  + ${cand.item.file} (${Math.round(size / 1024)} ك.ب) — ${cand.item.license}${cand.quality ? " [مختار]" : ""}`);
+        console.log(`  + ${cand.item.file} (${Math.round(size / 1024)} ك.ب) — ${cand.item.license}`);
       } catch (err) {
-        console.log(`  - تجاوز ${cand.item.title}: ${err.message}`);
+        failures.push(`${entry.title}: ${err.message}`);
       }
     }
+    if (failures.length) {
+      throw new Error(`تعذّر ${failures.length} ملف من القائمة المعتمدة، ولم تتغير المكتبة:\n  - ${failures.join("\n  - ")}`);
+    }
+    if (!items.length) throw new Error("القائمة المعتمدة فارغة.");
+
+    items.sort((a, b) => a.id.localeCompare(b.id));
+    const check = LIBRARY.validateManifest({ items });
+    if (check.errors.length) throw new Error(`المانيفست غير صالح: ${check.errors.join("، ")}`);
+
+    // 3) كل الملفات جاهزة: نستبدل فئاتها في المكتبة دفعة واحدة
+    for (const category of CATEGORY_KEYS) {
+      fs.rmSync(path.join(BG_DIR, category), { recursive: true, force: true });
+    }
+    fs.cpSync(stage, BG_DIR, { recursive: true });
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
   }
-  fs.rmSync(tmp, { recursive: true, force: true });
 
-  if (!items.length) throw new Error("لم يُجلب أي ملف. تحقق من التصنيفات أو من اتصال الشبكة.");
-
-  items.sort((a, b) => a.id.localeCompare(b.id));
   const manifest = {
     version: 1,
     note: "كل عنصر لازم يكون له: id, title, category, type (image أو video), file, license, source, author. التفاصيل في LICENSES.md. هذا الملف يُولَّد بـ scripts/fetch-backgrounds.js.",
@@ -433,7 +420,7 @@ module.exports = {
   slugify,
   buildCandidate,
   renderLicenseTable,
-  SOURCES,
+  APPROVED,
   TABLE_BEGIN,
   TABLE_END,
 };

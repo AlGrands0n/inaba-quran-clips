@@ -114,8 +114,17 @@ test("renderLicenseTable escapes pipes and lists every item", () => {
   assert.match(lines[2], /جبال/);
 });
 
-test("every configured category is a known library category", () => {
-  for (const key of Object.keys(F.SOURCES)) {
-    assert.ok(LIB.CATEGORIES[key], `الفئة ${key} غير معروفة في المكتبة`);
+test("every approved item uses a known library category and a unique File: title", () => {
+  const titles = new Set();
+  const ids = new Set();
+  for (const entry of F.APPROVED) {
+    assert.ok(LIB.CATEGORIES[entry.category], `الفئة ${entry.category} غير معروفة في المكتبة`);
+    assert.match(entry.title, /^File:/, `عنوان غير صالح: ${entry.title}`);
+    assert.ok(!titles.has(entry.title), `عنوان مكرر: ${entry.title}`);
+    titles.add(entry.title);
+    // المعرّف يُشتق من العنوان بنفس طريقة buildCandidate، ويجب ألا يتكرر
+    const id = `commons-${F.slugify(entry.title.replace(/^File:/i, "").replace(/\.[^.]+$/, ""))}`;
+    assert.ok(!ids.has(id), `معرّف مكرر: ${id}`);
+    ids.add(id);
   }
 });
