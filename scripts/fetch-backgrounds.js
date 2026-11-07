@@ -40,10 +40,10 @@ const SOURCES = {
   waterfalls: ["Waterfalls"],
   deserts: ["Deserts", "Desert landscapes"],
   rain: ["Rain", "Rainy weather"],
-  clouds: ["Clouds"],
+  clouds: ["Clouds", "Cloudscapes", "Cumulus clouds"],
   sunrise: ["Sunrises", "Sunrise landscapes"],
   sunset: ["Sunsets", "Sunset landscapes"],
-  nightsky: ["Night sky", "Starry night"],
+  nightsky: ["Night sky", "Milky Way", "Starry night"],
   stars: ["Starry sky", "Stars"],
   nature: ["Landscapes", "Nature"],
 };
@@ -56,6 +56,23 @@ const MIN_VIDEO_SECONDS = 4;
 const VIDEO_SECONDS = 6; // المقطع يتكرر في التطبيق، فنكتفي بجزء قصير
 const MAX_ORIGINAL_BYTES = 150 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 6 * 1024 * 1024;
+
+// مراجعة يدوية بعد التشغيل: ملفات قبلها الفلتر الآلي لكن محتواها لا يناسب الخلفيات.
+// المفتاح هو معرّف العنصر في المانيفست، والقيمة سبب الاستبعاد. أي ملف جديد يُراجَع بنفس الطريقة.
+const REVIEW_EXCLUDED = new Map([
+  ["commons-tripoloskifotografiallc-1", "علامة نصية (حقوق) في الزاوية"],
+  ["commons-tripoloskifotografiallc-3", "علامة نصية (حقوق) في الزاوية"],
+  ["commons-two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la", "ليس سحاباً، نبتة أمام السماء"],
+  ["commons-hands-4650623766", "طريق ليلاً وليس طبيعة"],
+  ["commons-2011-07-29-deep-sky-7", "وهج مدينة وليس سماء ليلية"],
+  ["commons-2011-07-29-deep-sky-8", "غروب وأشجار وليس سماء ليلية"],
+  ["commons-2011-07-29-deep-sky-8-2", "غروب وأشجار وليس سماء ليلية"],
+  ["commons-starless-core-l1014", "رسم معلوماتي فيه نصوص"],
+  ["commons-never-quite-the-same", "شعار وعبارة نصية على الصورة"],
+  ["commons-balance-and-strength-3853768707", "شخص يركب الأمواج في المقدمة"],
+  ["commons-around-the-gro-glockner-3-798-m", "رسوم متراكبة فوق الفيديو"],
+  ["commons-nascer-do-sol-em-piracicaba-24-06-2023", "نصوص متراكبة فوق الفيديو"],
+]);
 
 // تصنيفات كومنز التي تدل على جودة مختارة من المجتمع
 const QUALITY_CATEGORY_RE = /^Category:(Featured pictures|Quality images|Valued images)/i;
@@ -170,6 +187,7 @@ function buildCandidate(page, category) {
     source: info.descriptionurl || page.title,
     author: author || "غير مذكور في الملف",
   };
+  if (REVIEW_EXCLUDED.has(item.id)) return { skip: `مستبعد بعد المراجعة: ${REVIEW_EXCLUDED.get(item.id)}` };
   const url = kind === "video" ? info.url : info.thumburl || info.url;
   const quality = categories.some((t) => QUALITY_CATEGORY_RE.test(t));
   return { item, kind, url, size: info.size, quality };
