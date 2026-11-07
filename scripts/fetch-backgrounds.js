@@ -8,7 +8,7 @@
  * يكتب الملفات في app/src/main/assets/www/backgrounds/<الفئة>/، ثم يعيد كتابة
  * manifest.json وجدول التراخيص داخل LICENSES.md (بين علامتي AUTO).
  *
- * يحتاج Node 18+ و ffmpeg. شغّله محلياً أو من GitHub Actions (workflow: fetch-backgrounds)
+ * يحتاج Node 18+ و ffmpeg. شغّله محلياً، أو من GitHub Actions بتفعيل fetch_backgrounds في workflow «Android build»
  * لأن بيئة التطوير قد تكون محجوبة عن ويكيميديا:
  *   node scripts/fetch-backgrounds.js
  */

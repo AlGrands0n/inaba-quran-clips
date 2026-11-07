@@ -15,7 +15,7 @@
 
 ## إعادة الجلب
 
-1. من GitHub: تشغيل workflow باسم `fetch-backgrounds` من تبويب Actions.
+1. من GitHub: تبويب Actions، ثم «Android build»، ثم «Run workflow» على الفرع، مع تفعيل `fetch_backgrounds`.
 2. محلياً (يحتاج Node 18 و ffmpeg): `node scripts/fetch-backgrounds.js`.
 
 يستبدل التشغيل الملفات القديمة للفئات المذكورة في السكربت، ثم يعيد كتابة `manifest.json` والجدول أدناه.
