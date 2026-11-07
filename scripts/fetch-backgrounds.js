@@ -47,6 +47,22 @@ const SOURCES = {
   stars: ["Starry sky", "Stars"],
   nature: ["Landscapes", "Nature"],
 };
+// بحث في كومنز عن فيديوهات بكل فئة. التصنيفات أغلبها CC BY-SA، فنبحث عن الفيديو مباشرة.
+const VIDEO_QUERY = {
+  mountains: "mountains landscape",
+  oceans: "ocean waves",
+  forests: "forest nature",
+  waterfalls: "waterfall",
+  deserts: "desert landscape",
+  rain: "rain nature",
+  clouds: "clouds sky",
+  sunrise: "sunrise landscape",
+  sunset: "sunset landscape",
+  nightsky: "night sky stars",
+  stars: "starry sky",
+  nature: "nature landscape",
+};
+const MAX_SEARCH_PAGES = 3;
 const PHOTOS_PER_CATEGORY = 3;
 const VIDEOS_PER_CATEGORY = 1;
 const MAX_PAGES_PER_SOURCE = 10; // كل صفحة 100 ملف، فالحد 1000 ملف لكل تصنيف
@@ -226,18 +242,18 @@ async function download(url, dest, maxBytes) {
   });
 }
 
-// يقرأ أعضاء تصنيف كومنز صفحة بصفحة (مع توكن المتابعة) حتى الحد
-async function* categoryPages(name, maxPages) {
+// يقرأ ملفات من تصنيف كومنز أو من بحث كومنز، صفحة بصفحة (مع توكن المتابعة) حتى الحد
+async function* filePages(spec, maxPages) {
+  const base = spec.search
+    ? { generator: "search", gsrsearch: spec.search, gsrnamespace: "6", gsrlimit: "100" }
+    : { generator: "categorymembers", gcmtitle: `Category:${spec.category}`, gcmtype: "file", gcmlimit: "100" };
   let cont = {};
   for (let i = 0; i < maxPages; i++) {
     const params = new URLSearchParams({
       action: "query",
       format: "json",
       formatversion: "2",
-      generator: "categorymembers",
-      gcmtitle: `Category:${name}`,
-      gcmtype: "file",
-      gcmlimit: "100",
+      ...base,
       prop: "imageinfo|categories",
       iiprop: "url|size|mime|mediatype|extmetadata|duration",
       iiurlwidth: "1920",
@@ -330,18 +346,22 @@ async function main() {
 
   const items = [];
   for (const [category, sources] of Object.entries(SOURCES)) {
-    // 1) نجمع المرشحين من كل التصنيفات (بدون تكرار)
+    // 1) نجمع المرشحين من التصنيفات وبحث الفيديو (بدون تكرار)
     const seen = new Set();
     const pages = [];
-    for (const source of sources) {
+    const specs = [
+      ...sources.map((name) => ({ category: name, max: MAX_PAGES_PER_SOURCE })),
+      { search: `filetype:video ${VIDEO_QUERY[category]}`, max: MAX_SEARCH_PAGES },
+    ];
+    for (const spec of specs) {
       try {
-        for await (const page of categoryPages(source, MAX_PAGES_PER_SOURCE)) {
+        for await (const page of filePages(spec, spec.max)) {
           if (seen.has(page.title)) continue;
           seen.add(page.title);
           pages.push(page);
         }
       } catch (err) {
-        console.log(`[${category}] تعذر قراءة تصنيف "${source}": ${err.message}`);
+        console.log(`[${category}] تعذر قراءة "${spec.category || spec.search}": ${err.message}`);
       }
     }
 
