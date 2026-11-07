@@ -1,5 +1,126 @@
 {
   "version": 1,
-  "note": "كل عنصر لازم يكون له: id, title, category, type (image أو video), file, license, source, author. العناصر الناقصة لا تظهر في التطبيق. التفاصيل في LICENSES.md.",
-  "items": []
+  "note": "كل عنصر لازم يكون له: id, title, category, type (image أو video), file, license, source, author. التفاصيل في LICENSES.md. هذا الملف يُولَّد بـ scripts/fetch-backgrounds.js.",
+  "items": [
+    {
+      "id": "commons-08020047",
+      "title": "08020047",
+      "category": "forests",
+      "type": "image",
+      "file": "forests/08020047.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:08020047.JPG",
+      "author": "Catalina Holguin"
+    },
+    {
+      "id": "commons-2011-07-29-deep-sky-7",
+      "title": "2011-07-29-deep-sky-7",
+      "category": "nightsky",
+      "type": "image",
+      "file": "nightsky/2011-07-29-deep-sky-7.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:2011-07-29-deep-sky-7.jpg",
+      "author": "Thomas Bresson"
+    },
+    {
+      "id": "commons-500px-photo-134652121",
+      "title": "500px photo (134652121)",
+      "category": "mountains",
+      "type": "image",
+      "file": "mountains/500px-photo-134652121.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(134652121).jpeg",
+      "author": "Binaryboy"
+    },
+    {
+      "id": "commons-a-scenic-view-of-lands-on-the-desert",
+      "title": "A scenic view of lands on the desert",
+      "category": "deserts",
+      "type": "image",
+      "file": "deserts/a-scenic-view-of-lands-on-the-desert.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:A_scenic_view_of_lands_on_the_desert.jpg",
+      "author": "Gentry George, U.S. Fish and Wildlife Service"
+    },
+    {
+      "id": "commons-adriel-kloppenburg-2015-04-15-unsplash-tywbzwszssg",
+      "title": "Adriel Kloppenburg 2015-04-15 (Unsplash TyWBZWsZSSg)",
+      "category": "sunset",
+      "type": "image",
+      "file": "sunset/adriel-kloppenburg-2015-04-15-unsplash-tywbzwszssg.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Adriel_Kloppenburg_2015-04-15_(Unsplash_TyWBZWsZSSg).jpg",
+      "author": "Adriel Kloppenburg adriel"
+    },
+    {
+      "id": "commons-around-the-gro-glockner-3-798-m",
+      "title": "Around the Großglockner (3,798 m)",
+      "category": "mountains",
+      "type": "video",
+      "file": "mountains/around-the-gro-glockner-3-798-m.mp4",
+      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Around_the_Gro%C3%9Fglockner_(3,798_m).webm",
+      "author": "Upabjojr"
+    },
+    {
+      "id": "commons-as09-20-3175-21317153313",
+      "title": "AS09-20-3175 (21317153313)",
+      "category": "sunrise",
+      "type": "image",
+      "file": "sunrise/as09-20-3175-21317153313.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:AS09-20-3175_(21317153313).jpg",
+      "author": "Project Apollo Archive"
+    },
+    {
+      "id": "commons-hands-4650623766",
+      "title": "Hands (4650623766)",
+      "category": "nature",
+      "type": "image",
+      "file": "nature/hands-4650623766.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Hands_(4650623766).jpg",
+      "author": "David DeHetre from Lawrence, KS, USA, United States"
+    },
+    {
+      "id": "commons-item",
+      "title": "မိုးတိမ်တိုက်",
+      "category": "clouds",
+      "type": "video",
+      "file": "clouds/item.mp4",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:%E1%80%99%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%90%E1%80%AD%E1%80%99%E1%80%BA%E1%80%90%E1%80%AD%E1%80%AF%E1%80%80%E1%80%BA.webm",
+      "author": "စာကလေး"
+    },
+    {
+      "id": "commons-never-quite-the-same",
+      "title": "NEVER QUITE THE SAME",
+      "category": "oceans",
+      "type": "image",
+      "file": "oceans/never-quite-the-same.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:NEVER_QUITE_THE_SAME.png",
+      "author": "Raymondsroad"
+    },
+    {
+      "id": "commons-panoramio-caihm-1",
+      "title": "- panoramio - Caihm (1)",
+      "category": "waterfalls",
+      "type": "image",
+      "file": "waterfalls/panoramio-caihm-1.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_-_Caihm_(1).jpg",
+      "author": "Caihm"
+    },
+    {
+      "id": "commons-two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la",
+      "title": "Two slender stems with leaf clusters against a cloudy sky, Lan Su Chinese Garden",
+      "category": "clouds",
+      "type": "image",
+      "file": "clouds/two-slender-stems-with-leaf-clusters-against-a-cloudy-sky-la.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Two_slender_stems_with_leaf_clusters_against_a_cloudy_sky,_Lan_Su_Chinese_Garden.jpg",
+      "author": "Z3lvs"
+    }
+  ]
 }
