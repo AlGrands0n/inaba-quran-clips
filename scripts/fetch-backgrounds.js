@@ -88,6 +88,7 @@ const REVIEW_EXCLUDED = new Map([
   ["commons-balance-and-strength-3853768707", "شخص يركب الأمواج في المقدمة"],
   ["commons-around-the-gro-glockner-3-798-m", "رسوم متراكبة فوق الفيديو"],
   ["commons-nascer-do-sol-em-piracicaba-24-06-2023", "نصوص متراكبة فوق الفيديو"],
+  ["commons-88-constellations-piece-13h25m0-1693-cc", "رسم خريطة نجوم وليس صورة سماء"],
 ]);
 
 // تصنيفات كومنز التي تدل على جودة مختارة من المجتمع
@@ -345,6 +346,7 @@ async function main() {
   }
 
   const items = [];
+  const usedTitles = new Set(); // كل ملف يظهر في فئة واحدة فقط
   for (const [category, sources] of Object.entries(SOURCES)) {
     // 1) نجمع المرشحين من التصنيفات وبحث الفيديو (بدون تكرار)
     const seen = new Set();
@@ -389,11 +391,13 @@ async function main() {
       if (photos >= PHOTOS_PER_CATEGORY && videos >= VIDEOS_PER_CATEGORY) break;
       if (cand.kind === "image" && photos >= PHOTOS_PER_CATEGORY) continue;
       if (cand.kind === "video" && videos >= VIDEOS_PER_CATEGORY) continue;
+      if (usedTitles.has(cand.item.title)) continue;
       const outFile = path.join(BG_DIR, category, path.basename(cand.item.file));
       try {
         fs.mkdirSync(path.dirname(outFile), { recursive: true });
         const size = await produce(cand, tmp, outFile);
         items.push(cand.item);
+        usedTitles.add(cand.item.title);
         if (cand.kind === "image") photos++;
         else videos++;
         console.log(`  + ${cand.item.file} (${Math.round(size / 1024)} ك.ب) — ${cand.item.license}${cand.quality ? " [مختار]" : ""}`);
