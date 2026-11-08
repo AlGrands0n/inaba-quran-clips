@@ -236,11 +236,13 @@
     if (hasTafsir) {
       const labelPx = unit * 0.024;
       const labelCss = font("Noto Naskh Arabic", labelPx, 700);
-      const inner = slot[1] - slot[0] - pad * 2 - labelPx * 1.8;
+      // لا نحجز مكان العنوان إذا كان مخفياً
+      const labelH = T.label ? labelPx * 1.8 : 0;
+      const inner = slot[1] - slot[0] - pad * 2 - labelH;
       const fit = fitTafsir(ctx, sc, seg, w * 0.8, inner);
       if (fit.overflow) overflow = true;
       tafsir = {
-        slot, labelCss, labelH: labelPx * 1.8, label: T.label || "", pad,
+        slot, labelCss, labelH, label: T.label || "", pad,
         css: fit.css, lh: fit.lh, lines: fit.lines,
         color: T.color, align: T.align, bgOpacity: num(T.bgOpacity, 35),
       };

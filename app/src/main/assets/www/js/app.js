@@ -51,6 +51,9 @@
     title: "",
     reciterName: "",
     brand: "إنابة",
+    // كل نص على الفيديو يمكن إخفاؤه. overlayText: الخانة الفارغة تعني النص الافتراضي
+    overlayOn: { title: true, subtitle: true, reciter: true, brand: true, transLabel: true, tafsirLabel: true },
+    overlayText: { subtitle: "", transLabel: "", tafsirLabel: "" },
     lightMode: false,
     design: {
       aspect: "9:16", customW: 1080, customH: 1920, res: 1080,
@@ -285,10 +288,22 @@
     return out;
   }
 
+  // النص الافتراضي لكل سطر قابل للتعديل (يظهر تلميحاً في الخانة إذا كانت فارغة)
+  function autoOverlayText() {
+    const s = surahData();
+    const tr = translationInfo();
+    return {
+      subtitle: s ? `سورة ${s.name} · الآيات ${toAr(S.from)} – ${toAr(S.to)}` : "",
+      transLabel: `ترجمة معاني · ${tr.label}`,
+      tafsirLabel: "التفسير الميسر",
+    };
+  }
+
   function buildScene() {
     const [w, h] = dims();
     const s = surahData();
     const tr = translationInfo();
+    const auto = autoOverlayText();
     const segments = buildSegments();
     return {
       w,
@@ -300,7 +315,7 @@
       tafsir: {
         on: S.tafsir.on, family: S.tafsir.family, size: S.tafsir.size, color: S.tafsir.color,
         pos: S.tafsir.pos, align: S.tafsir.align, bgOpacity: S.tafsir.bgOpacity,
-        label: "التفسير الميسر",
+        label: S.overlayOn.tafsirLabel ? (S.overlayText.tafsirLabel.trim() || auto.tafsirLabel) : "",
       },
       trans: {
         on: S.trans.on, family: tr.family, rtl: tr.rtl, size: S.trans.size,
@@ -314,11 +329,11 @@
       bg: { items: activeBgItems(), interval: S.bg.interval, fallback: S.bg.solidColor },
       segments,
       duration: audioDuration(),
-      title: S.title.trim(),
-      subtitle: s ? `سورة ${s.name} · الآيات ${toAr(S.from)} – ${toAr(S.to)}` : "",
-      reciterName: S.reciterName.trim(),
-      brand: S.brand.trim(),
-      transLabel: S.trans.on ? `ترجمة معاني · ${tr.label}` : "",
+      title: S.overlayOn.title ? S.title.trim() : "",
+      subtitle: S.overlayOn.subtitle ? (S.overlayText.subtitle.trim() || auto.subtitle) : "",
+      reciterName: S.overlayOn.reciter ? S.reciterName.trim() : "",
+      brand: S.overlayOn.brand ? S.brand.trim() : "",
+      transLabel: S.trans.on && S.overlayOn.transLabel ? (S.overlayText.transLabel.trim() || auto.transLabel) : "",
     };
   }
 
@@ -662,6 +677,12 @@
     $("transNote").textContent = S.trans.on ? "ترجمة معاني، وليست نص القرآن الأصلي." : "";
     $("tafsirNote").textContent = S.tafsir.on ? "التفسير الميسر، ويتغيّر مع الآية الظاهرة." : "";
     $("fadeLabel").textContent = `${toAr(S.design.fadeMs)} ms`;
+    const auto = autoOverlayText();
+    for (const k of Object.keys(auto)) {
+      const el = document.querySelector(`[data-bind="overlayText.${k}"]`);
+      // التلميح قصير حتى يتسع في الخانة؛ النص الكامل يبقى هو الافتراضي على الفيديو
+      if (el) el.placeholder = auto[k].split(" · ")[0];
+    }
   }
 
   function renderAll() {

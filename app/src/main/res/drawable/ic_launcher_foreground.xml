@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- أيقونة بسيطة: هلال ونجمة بالذهبي على خلفية الألوان الداكنة -->
+<!-- أيقونة إنابة: نجمة ثمانية ذهبية فيها مثلث تشغيل (فيديو) على الخلفية الداكنة.
+     الشكل كله داخل المنطقة الآمنة للأيقونة التكيفية (66dp في المنتصف). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- المساحة الآمنة للأيقونة التكيفية 66dp في المنتصف -->
-    <group
-        android:translateX="21.6"
-        android:translateY="21.6">
+    <!-- النجمة الذهبية -->
+    <path
+        android:fillColor="#E8C968"
+        android:pathData="M54.00,23.00 L63.08,32.08 L75.92,32.08 L75.92,44.92 L85.00,54.00 L75.92,63.08 L75.92,75.92 L63.08,75.92 L54.00,85.00 L44.92,75.92 L32.08,75.92 L32.08,63.08 L23.00,54.00 L32.08,44.92 L32.08,32.08 L44.92,32.08 Z" />
 
-        <!-- الهلال -->
-        <path
-            android:fillColor="#C9A227"
-            android:pathData="M30,12
-                A24,24 0 1,0 30,54
-                A19,19 0 1,1 30,12
-                Z" />
-
-        <!-- النجمة الصغيرة -->
-        <path
-            android:fillColor="#C9A227"
-            android:pathData="M42,20 L44,25 L49,25 L45,28 L46.5,33 L42,30 L37.5,33 L39,28 L35,25 L40,25 Z" />
-    </group>
+    <!-- مثلث التشغيل بلون الخلفية (قطعة من النجمة) -->
+    <path
+        android:fillColor="#0D1B22"
+        android:pathData="M49.5,46.5 L49.5,61.5 L63,54 Z" />
 </vector>

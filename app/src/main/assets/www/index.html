@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
-<title>صانع المقاطع القرآنية | إنابة</title>
+<title>إنابة</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
@@ -149,6 +149,11 @@
     background: color-mix(in srgb, var(--warn) 14%, transparent);
     border-radius: 12px; padding: 8px 12px; margin: 8px 0;
   }
+
+  /* ---------- نصوص الفيديو: الخانة وزر الإظهار جنباً إلى جنب ---------- */
+  .overlay-row { display: flex; gap: 10px; align-items: flex-end; }
+  .overlay-row > label:first-child { flex: 1 1 auto; min-width: 0; margin: 10px 0; }
+  .overlay-row > .overlay-on { flex: none; margin: 0 0 12px; white-space: nowrap; }
 
   /* ---------- قوائم بأسلوب أندرويد ---------- */
   .list { list-style: none; margin: 0; padding: 0; background: var(--surface); border-radius: var(--radius); overflow: hidden; }
@@ -476,9 +481,6 @@
           <label>أو ارفع ملف صوت للقارئ
             <input type="file" id="audioFile" accept="audio/*">
           </label>
-          <label>اسم القارئ على المقطع
-            <input type="text" data-bind="reciterName">
-          </label>
         </fieldset>
 
         <div class="stepnav">
@@ -726,9 +728,52 @@
         </fieldset>
 
         <fieldset>
-          <legend>عنوان المقطع والعلامة</legend>
-          <label>عنوان المقطع <input type="text" data-bind="title"></label>
-          <label>اسم العلامة <input type="text" data-bind="brand"></label>
+          <legend>النصوص على الفيديو</legend>
+          <p class="hint">كل نص تحت يظهر على الفيديو. غيّر كلامه، أو ألغِ «إظهار» لحذفه من الفيديو. الخانة الفارغة تعني النص الافتراضي.</p>
+
+          <div class="overlay-row">
+            <label>العنوان أعلى الفيديو
+              <input type="text" data-bind="title" placeholder="يُملأ باسم السورة تلقائياً">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.title"> إظهار</label>
+          </div>
+
+          <div class="overlay-row">
+            <label>السطر تحت العنوان
+              <input type="text" data-bind="overlayText.subtitle">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.subtitle"> إظهار</label>
+          </div>
+
+          <div class="overlay-row">
+            <label>اسم القارئ أسفل الفيديو
+              <input type="text" data-bind="reciterName" placeholder="يُملأ من القارئ المختار">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.reciter"> إظهار</label>
+          </div>
+
+          <div class="overlay-row">
+            <label>اسم العلامة أسفل الفيديو
+              <input type="text" data-bind="brand" placeholder="إنابة">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.brand"> إظهار</label>
+          </div>
+
+          <div class="overlay-row">
+            <label>عنوان الترجمة (يظهر عند تفعيل الترجمة)
+              <input type="text" data-bind="overlayText.transLabel">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.transLabel"> إظهار</label>
+          </div>
+
+          <div class="overlay-row">
+            <label>عنوان التفسير (يظهر عند تفعيل التفسير)
+              <input type="text" data-bind="overlayText.tafsirLabel">
+            </label>
+            <label class="inline overlay-on"><input type="checkbox" data-bind="overlayOn.tafsirLabel"> إظهار</label>
+          </div>
+
+          <p class="hint">نص الآيات نفسه يُزال بحذف الآية من الجدول أعلاه. الترجمة والتفسير يُوقفان من قسميهما.</p>
         </fieldset>
 
         <div class="stepnav">

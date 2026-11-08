@@ -70,7 +70,7 @@ class ExportService : Service() {
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle("صانع المقاطع القرآنية")
+            .setContentTitle(getString(R.string.app_name))
             .setContentText(text ?: "جاري تجهيز المقطع")
             .setProgress(100, percent.coerceIn(0, 100), false)
             .setOngoing(true)
