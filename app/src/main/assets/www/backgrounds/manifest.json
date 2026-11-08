@@ -1,0 +1,386 @@
+{
+  "version": 1,
+  "note": "كل عنصر لازم يكون له: id, title, category, type (image أو video), file, license, source, author. التفاصيل في LICENSES.md. هذا الملف يُولَّد بـ scripts/fetch-backgrounds.js.",
+  "items": [
+    {
+      "id": "commons-08020047",
+      "title": "08020047",
+      "category": "forests",
+      "type": "image",
+      "file": "forests/08020047.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:08020047.JPG",
+      "author": "Catalina Holguin"
+    },
+    {
+      "id": "commons-08040-baunei-province-of-ogliastra-italy-panoramio-2",
+      "title": "08040 Baunei, Province of Ogliastra, Italy - panoramio (2)",
+      "category": "oceans",
+      "type": "image",
+      "file": "oceans/08040-baunei-province-of-ogliastra-italy-panoramio-2.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:08040_Baunei,_Province_of_Ogliastra,_Italy_-_panoramio_(2).jpg",
+      "author": "goldpicasa"
+    },
+    {
+      "id": "commons-151473-dry-leaves-pikiwiki-israel",
+      "title": "151473 dry leaves PikiWiki Israel",
+      "category": "nature",
+      "type": "image",
+      "file": "nature/151473-dry-leaves-pikiwiki-israel.jpg",
+      "license": "CC BY 2.5 — https://creativecommons.org/licenses/by/2.5/",
+      "source": "https://commons.wikimedia.org/wiki/File:151473_dry_leaves_PikiWiki_Israel.jpg",
+      "author": "דרור פייטלסון"
+    },
+    {
+      "id": "commons-2011-08-27-22-23-58-nightscape-under-clouds",
+      "title": "2011-08-27 22-23-58-nightscape-under-clouds",
+      "category": "nightsky",
+      "type": "image",
+      "file": "nightsky/2011-08-27-22-23-58-nightscape-under-clouds.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:2011-08-27_22-23-58-nightscape-under-clouds.jpg",
+      "author": "Thomas Bresson"
+    },
+    {
+      "id": "commons-2011-08-27-22-34-12-iridium-flare",
+      "title": "2011-08-27 22-34-12-iridium-flare",
+      "category": "nightsky",
+      "type": "image",
+      "file": "nightsky/2011-08-27-22-34-12-iridium-flare.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:2011-08-27_22-34-12-iridium-flare.jpg",
+      "author": "Thomas Bresson"
+    },
+    {
+      "id": "commons-2016-366-76-west-25849338025",
+      "title": "2016 366 76 West (25849338025)",
+      "category": "oceans",
+      "type": "image",
+      "file": "oceans/2016-366-76-west-25849338025.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:2016_366_76_West_(25849338025).jpg",
+      "author": "Edna Winti"
+    },
+    {
+      "id": "commons-20160919164811-black-mountain-south-of-cooktown-29264110154",
+      "title": "20160919164811 - Black Mountain south of Cooktown (29264110154)",
+      "category": "mountains",
+      "type": "image",
+      "file": "mountains/20160919164811-black-mountain-south-of-cooktown-29264110154.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:20160919164811_-_Black_Mountain_south_of_Cooktown_(29264110154).jpg",
+      "author": "Felix Dance"
+    },
+    {
+      "id": "commons-20161022143430-hills-beyond-childers-29890269773",
+      "title": "20161022143430 - Hills beyond Childers (29890269773)",
+      "category": "mountains",
+      "type": "image",
+      "file": "mountains/20161022143430-hills-beyond-childers-29890269773.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:20161022143430_-_Hills_beyond_Childers_(29890269773).jpg",
+      "author": "Felix Dance"
+    },
+    {
+      "id": "commons-30010035352-jpg-195626321",
+      "title": "30010035352 Jpg (195626321)",
+      "category": "stars",
+      "type": "image",
+      "file": "stars/30010035352-jpg-195626321.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:30010035352_Jpg_(195626321).jpeg",
+      "author": "Noah A"
+    },
+    {
+      "id": "commons-500px-photo-134652121",
+      "title": "500px photo (134652121)",
+      "category": "mountains",
+      "type": "image",
+      "file": "mountains/500px-photo-134652121.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(134652121).jpeg",
+      "author": "Binaryboy"
+    },
+    {
+      "id": "commons-500px-photo-240996567",
+      "title": "500px photo (240996567)",
+      "category": "waterfalls",
+      "type": "image",
+      "file": "waterfalls/500px-photo-240996567.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(240996567).jpeg",
+      "author": "William Kay"
+    },
+    {
+      "id": "commons-500px-photo-32815753",
+      "title": "500px photo (32815753)",
+      "category": "oceans",
+      "type": "image",
+      "file": "oceans/500px-photo-32815753.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(32815753).jpeg",
+      "author": "Justin Ornellas"
+    },
+    {
+      "id": "commons-500px-photo-44617892",
+      "title": "500px photo (44617892)",
+      "category": "sunrise",
+      "type": "image",
+      "file": "sunrise/500px-photo-44617892.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(44617892).jpeg",
+      "author": "Sascha Erni"
+    },
+    {
+      "id": "commons-500px-photo-61931629",
+      "title": "500px photo (61931629)",
+      "category": "waterfalls",
+      "type": "image",
+      "file": "waterfalls/500px-photo-61931629.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:500px_photo_(61931629).jpeg",
+      "author": "Vincent Yuen"
+    },
+    {
+      "id": "commons-88-constellations-piece-17h21m-30-1706-cc",
+      "title": "88 Constellations Piece (17h21m-30-1706-CC)",
+      "category": "stars",
+      "type": "image",
+      "file": "stars/88-constellations-piece-17h21m-30-1706-cc.jpg",
+      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:88_Constellations_Piece_(17h21m-30-1706-CC).jpg",
+      "author": "NOIRLab/NSF/AURA/E. Slawik"
+    },
+    {
+      "id": "commons-a-scenic-view-of-lands-on-the-desert",
+      "title": "A scenic view of lands on the desert",
+      "category": "deserts",
+      "type": "image",
+      "file": "deserts/a-scenic-view-of-lands-on-the-desert.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:A_scenic_view_of_lands_on_the_desert.jpg",
+      "author": "Gentry George, U.S. Fish and Wildlife Service"
+    },
+    {
+      "id": "commons-a-scenic-view-of-the-desert-with-mountains-in-the-background",
+      "title": "A scenic view of the desert with mountains in the background on the desert",
+      "category": "deserts",
+      "type": "image",
+      "file": "deserts/a-scenic-view-of-the-desert-with-mountains-in-the-background.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:A_scenic_view_of_the_desert_with_mountains_in_the_background_on_the_desert.jpg",
+      "author": "Gentry George, U.S. Fish and Wildlife Service"
+    },
+    {
+      "id": "commons-a-view-of-the-desert-with-sand-dunes-in-the-foreground-and-m",
+      "title": "A view of the desert with sand dunes in the foreground and mountains in the background",
+      "category": "deserts",
+      "type": "image",
+      "file": "deserts/a-view-of-the-desert-with-sand-dunes-in-the-foreground-and-m.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:A_view_of_the_desert_with_sand_dunes_in_the_foreground_and_mountains_in_the_background.jpg",
+      "author": "Gentry George, U.S. Fish and Wildlife Service"
+    },
+    {
+      "id": "commons-abends-am-see-222401769",
+      "title": "Abends Am See (222401769)",
+      "category": "sunset",
+      "type": "image",
+      "file": "sunset/abends-am-see-222401769.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Abends_Am_See_(222401769).jpeg",
+      "author": "Reinhard Wolf"
+    },
+    {
+      "id": "commons-adriel-kloppenburg-2015-04-15-unsplash-tywbzwszssg",
+      "title": "Adriel Kloppenburg 2015-04-15 (Unsplash TyWBZWsZSSg)",
+      "category": "sunset",
+      "type": "image",
+      "file": "sunset/adriel-kloppenburg-2015-04-15-unsplash-tywbzwszssg.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Adriel_Kloppenburg_2015-04-15_(Unsplash_TyWBZWsZSSg).jpg",
+      "author": "Adriel Kloppenburg adriel"
+    },
+    {
+      "id": "commons-adriel-kloppenburg-2015-04-15-unsplash-uytyy-k1ns8",
+      "title": "Adriel Kloppenburg 2015-04-15 (Unsplash UYtyy-K1nS8)",
+      "category": "sunrise",
+      "type": "image",
+      "file": "sunrise/adriel-kloppenburg-2015-04-15-unsplash-uytyy-k1ns8.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Adriel_Kloppenburg_2015-04-15_(Unsplash_UYtyy-K1nS8).jpg",
+      "author": "Adriel Kloppenburg adriel"
+    },
+    {
+      "id": "commons-anthony-delanoix-2015-04-14-unsplash",
+      "title": "Anthony DELANOIX 2015-04-14 (Unsplash)",
+      "category": "sunset",
+      "type": "image",
+      "file": "sunset/anthony-delanoix-2015-04-14-unsplash.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Anthony_DELANOIX_2015-04-14_(Unsplash).jpg",
+      "author": "Anthony DELANOIX anthonydelanoix"
+    },
+    {
+      "id": "commons-as09-20-3175-21317153313",
+      "title": "AS09-20-3175 (21317153313)",
+      "category": "sunrise",
+      "type": "image",
+      "file": "sunrise/as09-20-3175-21317153313.jpg",
+      "license": "Public domain — https://creativecommons.org/publicdomain/mark/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:AS09-20-3175_(21317153313).jpg",
+      "author": "Project Apollo Archive"
+    },
+    {
+      "id": "commons-clouds-at-sunset-time-lapse",
+      "title": "Clouds at sunset (time lapse)",
+      "category": "sunset",
+      "type": "video",
+      "file": "sunset/clouds-at-sunset-time-lapse.mp4",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Clouds_at_sunset_(time_lapse).webm",
+      "author": "https://www.youtube.com/user/Editor"
+    },
+    {
+      "id": "commons-desolation-creek-in-oregon-usa",
+      "title": "Desolation Creek in Oregon, USA",
+      "category": "forests",
+      "type": "video",
+      "file": "forests/desolation-creek-in-oregon-usa.mp4",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Desolation_Creek_in_Oregon,_USA.webm",
+      "author": "Ecotrust"
+    },
+    {
+      "id": "commons-esocast-63",
+      "title": "ESOcast 63",
+      "category": "nightsky",
+      "type": "video",
+      "file": "nightsky/esocast-63.mp4",
+      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:ESOcast_63.webm",
+      "author": "ESO"
+    },
+    {
+      "id": "commons-goats-in-sunnyvale",
+      "title": "Goats in Sunnyvale",
+      "category": "nature",
+      "type": "video",
+      "file": "nature/goats-in-sunnyvale.mp4",
+      "license": "CC BY 4.0 — https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Goats_in_Sunnyvale.webm",
+      "author": "Kat Walsh"
+    },
+    {
+      "id": "commons-graceful-birds-in-the-sky-amazing-bird-sound-user-free-video",
+      "title": "Graceful Birds in the Sky-Amazing Bird Sound-User FREE Videos",
+      "category": "nature",
+      "type": "video",
+      "file": "nature/graceful-birds-in-the-sky-amazing-bird-sound-user-free-video.mp4",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Graceful_Birds_in_the_Sky-Amazing_Bird_Sound-User_FREE_Videos.webm",
+      "author": "Earthwild TV"
+    },
+    {
+      "id": "commons-grand-canyon-national-park-bright-and-colorful-after-a-gentl",
+      "title": "Grand Canyon National Park Bright and Colorful - After a Gentle Rain (13115283315)",
+      "category": "rain",
+      "type": "video",
+      "file": "rain/grand-canyon-national-park-bright-and-colorful-after-a-gentl.mp4",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_National_Park_Bright_and_Colorful_-_After_a_Gentle_Rain_(13115283315).webm",
+      "author": "Grand Canyon National Park"
+    },
+    {
+      "id": "commons-hungate-canyon-in-washington",
+      "title": "Hungate Canyon in Washington",
+      "category": "deserts",
+      "type": "video",
+      "file": "deserts/hungate-canyon-in-washington.mp4",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Hungate_Canyon_in_Washington.webm",
+      "author": "Bureau of Land Management Oregon and Washington"
+    },
+    {
+      "id": "commons-i-i-24196687643",
+      "title": "-i---i- (24196687643)",
+      "category": "stars",
+      "type": "image",
+      "file": "stars/i-i-24196687643.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:-i---i-_(24196687643).jpg",
+      "author": "MATHIAS, M H from Guaratinguetá, Brasil"
+    },
+    {
+      "id": "commons-item",
+      "title": "မိုးတိမ်တိုက်",
+      "category": "clouds",
+      "type": "video",
+      "file": "clouds/item.mp4",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:%E1%80%99%E1%80%AD%E1%80%AF%E1%80%B8%E1%80%90%E1%80%AD%E1%80%99%E1%80%BA%E1%80%90%E1%80%AD%E1%80%AF%E1%80%80%E1%80%BA.webm",
+      "author": "စာကလေး"
+    },
+    {
+      "id": "commons-jnudr024-47930111511",
+      "title": "JNUDR024 (47930111511)",
+      "category": "nature",
+      "type": "image",
+      "file": "nature/jnudr024-47930111511.jpg",
+      "license": "CC BY 2.0 — https://creativecommons.org/licenses/by/2.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:JNUDR024_(47930111511).jpg",
+      "author": "i threw a guitar at him."
+    },
+    {
+      "id": "commons-krimmler-wasserfaelle-waterfall-in-austria-biggest-from-euro",
+      "title": "Krimmler Wasserfaelle Waterfall in Austria Biggest from Europe 380m at the top",
+      "category": "waterfalls",
+      "type": "video",
+      "file": "waterfalls/krimmler-wasserfaelle-waterfall-in-austria-biggest-from-euro.mp4",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:Krimmler_Wasserfaelle_Waterfall_in_Austria_Biggest_from_Europe_380m_at_the_top.webm",
+      "author": "Erwin Lindsen"
+    },
+    {
+      "id": "commons-la-vigolana-vista-dalla-strada-vecchia-per-vigolo-vattaro",
+      "title": "La Vigolana vista dalla strada vecchia per Vigolo Vattaro",
+      "category": "nature",
+      "type": "image",
+      "file": "nature/la-vigolana-vista-dalla-strada-vecchia-per-vigolo-vattaro.jpg",
+      "license": "CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:La_Vigolana_vista_dalla_strada_vecchia_per_Vigolo_Vattaro.jpg",
+      "author": "Peter A. Andersen"
+    },
+    {
+      "id": "commons-panoramio-2538",
+      "title": "- panoramio (2538)",
+      "category": "forests",
+      "type": "image",
+      "file": "forests/panoramio-2538.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_(2538).jpg",
+      "author": "sai aneesh"
+    },
+    {
+      "id": "commons-panoramio-4047",
+      "title": "- panoramio (4047)",
+      "category": "forests",
+      "type": "image",
+      "file": "forests/panoramio-4047.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_(4047).jpg",
+      "author": "tomyst"
+    },
+    {
+      "id": "commons-panoramio-caihm-1",
+      "title": "- panoramio - Caihm (1)",
+      "category": "waterfalls",
+      "type": "image",
+      "file": "waterfalls/panoramio-caihm-1.jpg",
+      "license": "CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/",
+      "source": "https://commons.wikimedia.org/wiki/File:-_panoramio_-_Caihm_(1).jpg",
+      "author": "Caihm"
+    }
+  ]
+}

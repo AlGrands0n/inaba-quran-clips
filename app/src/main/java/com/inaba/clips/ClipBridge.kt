@@ -1,10 +1,13 @@
 package com.inaba.clips
 
 import android.content.ContentValues
+import android.content.Intent
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Base64
 import android.view.WindowManager
 import android.webkit.JavascriptInterface
+import androidx.core.content.ContextCompat
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -12,10 +15,11 @@ import java.io.OutputStream
 /**
  * جسر بين صفحة الويب والتطبيق (window.InabaBridge).
  *
- * الفيديو المُصدَّر بيوصل من الصفحة على شكل أجزاء base64 (حتى ما نحمّل ملف كبير كنص واحد)،
- * وبنكتبه بملف مؤقت، وبعدين بننقله لمجلد Download/Inaba عبر MediaStore.
+ * الملف المُصدَّر يوصل من الصفحة على شكل أجزاء base64، نكتبه بملف مؤقت في الكاش،
+ * وبعدين ننقله لمجلد داخل التنزيلات باسم التطبيق (Download/إنابة) عبر MediaStore،
+ * بنفس الاسم العربي. MediaStore ينشئ المجلد تلقائياً، ولا يحتاج صلاحية تخزين على أندرويد 10 فما فوق.
  *
- * ملاحظة: كل الدوال هنا بترجّع قيم ولا بترمي استثناءات، لأن الاستثناء داخل JavascriptInterface
+ * ملاحظة: كل الدوال هنا ترجّع قيم ولا ترمي استثناءات، لأن الاستثناء داخل JavascriptInterface
  * ممكن يوقّف التطبيق.
  */
 class ClipBridge(private val host: MainActivity) {
@@ -29,12 +33,13 @@ class ClipBridge(private val host: MainActivity) {
     fun beginSave(fileName: String, mimeType: String): Boolean {
         cancelSave()
         return try {
-            val safeName = fileName.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val name = safeFileName(fileName)
             val file = File(host.cacheDir, "export-${System.currentTimeMillis()}.part")
             tempStream = FileOutputStream(file)
             tempFile = file
-            pendingName = safeName
-            pendingMime = mimeType
+            pendingName = name
+            // نوع الملف لازم يطابق الامتداد، وإلا المعرض يعرض الفيديو مضروباً أو ما يفتحه
+            pendingMime = mimeFor(name) ?: mimeType.substringBefore(';').trim()
             true
         } catch (e: Exception) {
             false
@@ -53,7 +58,7 @@ class ClipBridge(private val host: MainActivity) {
         }
     }
 
-    /** يرجّع مسار الملف المحفوظ، أو نص يبدأ بـ ERROR إذا فشل. */
+    /** يرجّع مسار الملف المحفوظ (مثل Download/الفاتحة 1-7.mp4)، أو نص يبدأ بـ ERROR إذا فشل. */
     @JavascriptInterface
     fun endSave(): String {
         val stream = tempStream ?: return "ERROR: لم يبدأ الحفظ"
@@ -81,7 +86,7 @@ class ClipBridge(private val host: MainActivity) {
         tempFile = null
     }
 
-    /** يبقي الشاشة مفتوحة أثناء التسجيل حتى ما تطفي وتوقف الرسم. */
+    /** يبقي الشاشة مفتوحة أثناء التصدير حتى ما تطفي وتوقف الرسم. */
     @JavascriptInterface
     fun setKeepScreenOn(on: Boolean) {
         host.runOnUiThread {
@@ -93,18 +98,82 @@ class ClipBridge(private val host: MainActivity) {
         }
     }
 
+    /** يشغّل خدمة التصدير (إشعار بالتقدّم، ويمنع إيقاف التطبيق). */
+    @JavascriptInterface
+    fun startExportService(text: String): Boolean {
+        return try {
+            val intent = Intent(host, ExportService::class.java).putExtra(ExportService.EXTRA_TEXT, text)
+            ContextCompat.startForegroundService(host, intent)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    @JavascriptInterface
+    fun updateExportService(percent: Int, text: String) {
+        if (!ExportService.running) return
+        try {
+            val intent = Intent(host, ExportService::class.java)
+                .setAction(ExportService.ACTION_UPDATE)
+                .putExtra(ExportService.EXTRA_PERCENT, percent)
+                .putExtra(ExportService.EXTRA_TEXT, text)
+            host.startService(intent)
+        } catch (_: Exception) {
+        }
+    }
+
+    @JavascriptInterface
+    fun stopExportService() {
+        if (!ExportService.running) return
+        try {
+            val intent = Intent(host, ExportService::class.java).setAction(ExportService.ACTION_STOP)
+            host.startService(intent)
+        } catch (_: Exception) {
+        }
+    }
+
+    /** يحذف الأحرف اللي ما تنفع في أسماء الملفات، ويبقي العربي والمسافات والأرقام. */
+    private fun safeFileName(raw: String): String {
+        val cleaned = raw
+            .replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+        if (cleaned.isEmpty()) return "مقطع قرآني"
+        val dot = cleaned.lastIndexOf('.')
+        val ext = if (dot > 0 && cleaned.length - dot <= 5) cleaned.substring(dot) else ""
+        val base = cleaned.substring(0, cleaned.length - ext.length)
+        return base.take(MAX_BASE_LENGTH).trimEnd() + ext
+    }
+
+    private fun mimeFor(name: String): String? = when {
+        name.endsWith(".mp4", ignoreCase = true) -> "video/mp4"
+        name.endsWith(".webm", ignoreCase = true) -> "video/webm"
+        else -> null
+    }
+
+    /** اسم المجلد داخل التنزيلات = اسم التطبيق من strings.xml، بدون أحرف ممنوعة في أسماء المجلدات. */
+    private fun appFolder(): String =
+        host.getString(R.string.app_name)
+            .replace(Regex("[\\\\/:*?\"<>|\\p{Cntrl}]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .ifEmpty { "مقاطع قرآنية" }
+
+    /** يرجّع مسار الملف النهائي داخل التنزيلات (النظام قد يضيف رقماً إذا كان الاسم مستخدماً). */
     private fun publishToDownloads(file: File, name: String, mime: String): String {
         val resolver = host.contentResolver
+        val folder = "${Environment.DIRECTORY_DOWNLOADS}/${appFolder()}"
         val values = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, name)
             put(MediaStore.Downloads.MIME_TYPE, mime)
-            put(MediaStore.Downloads.RELATIVE_PATH, RELATIVE_FOLDER)
+            put(MediaStore.Downloads.RELATIVE_PATH, "$folder/")
             put(MediaStore.Downloads.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
             ?: return "ERROR: تعذر إنشاء الملف في التنزيلات"
 
-        try {
+        return try {
             val out = resolver.openOutputStream(uri)
                 ?: throw IllegalStateException("تعذر فتح الملف للكتابة")
             out.use { output -> file.inputStream().use { input -> input.copyTo(output) } }
@@ -112,14 +181,18 @@ class ClipBridge(private val host: MainActivity) {
             values.clear()
             values.put(MediaStore.Downloads.IS_PENDING, 0)
             resolver.update(uri, values, null, null)
+
+            val finalName = resolver.query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)
+                ?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                ?: name
+            "$folder/$finalName"
         } catch (e: Exception) {
             resolver.delete(uri, null, null)
-            return "ERROR: ${e.message ?: "تعذر الكتابة"}"
+            "ERROR: ${e.message ?: "تعذر الكتابة"}"
         }
-        return "$RELATIVE_FOLDER$name"
     }
 
     private companion object {
-        const val RELATIVE_FOLDER = "Download/Inaba/"
+        const val MAX_BASE_LENGTH = 120
     }
 }
